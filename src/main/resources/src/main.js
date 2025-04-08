@@ -2,7 +2,6 @@ import Vue from 'vue'
 import App from '@/App.vue'
 // element ui 完全引入
 import ElementUI from 'element-ui'
-import '@/assets/css/element-variables.scss'
 import '@/assets/css/style.scss'
 // 加载路由
 // import router from '@/router/router-static.js';
