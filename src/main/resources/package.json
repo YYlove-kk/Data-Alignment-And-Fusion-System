@@ -1,0 +1,39 @@
+{
+  "name": "planprocessingviews",
+  "private": true,
+  "version": "0.0.0",
+  "main": "main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "nodemon --exec electron admin/admin --watch ./ --ext .js,.html,.css,.js,.json,.svg,.ts,.tsx,.vue"
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.7.7",
+    "cytoscape": "^3.30.2",
+    "cytoscape-dagre": "^2.5.0",
+    "echarts": "^5.5.1",
+    "element-plus": "^2.8.3",
+    "frappe-gantt": "^0.6.1",
+    "html2canvas": "^1.4.1",
+    "sass-embedded": "^1.78.0",
+    "vis-network": "^9.1.9",
+    "vue": "^3.4.15",
+    "vue-ganttastic": "^0.9.34",
+    "vue-grid-layout": "3.0.0-beta1",
+    "vue-router": "^4.4.3",
+    "xml-js": "^1.6.11",
+    "xml2js": "^0.6.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.3",
+    "electron": "^32.0.1",
+    "electron-win-state": "^1.1.22",
+    "nodemon": "^3.1.4",
+    "unplugin-auto-import": "^0.18.3",
+    "unplugin-vue-components": "^0.27.4",
+    "vite": "^5.4.10"
+  }
+}
