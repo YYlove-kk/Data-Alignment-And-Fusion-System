@@ -1,4 +1,4 @@
-package DataAlignmentAndFusionApplication.DTO;
+package DataAlignmentAndFusionApplication.model.DTO;
 
 public class UserLoginDTO {
     private String username;

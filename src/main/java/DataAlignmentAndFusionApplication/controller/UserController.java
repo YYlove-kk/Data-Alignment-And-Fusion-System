@@ -1,10 +1,10 @@
 package DataAlignmentAndFusionApplication.controller;
 
 
-import DataAlignmentAndFusionApplication.DTO.UserLoginDTO;
-import DataAlignmentAndFusionApplication.DTO.UserRegistDTO;
+import DataAlignmentAndFusionApplication.model.DTO.UserLoginDTO;
+import DataAlignmentAndFusionApplication.model.DTO.UserRegistDTO;
 import DataAlignmentAndFusionApplication.common.CommonResponse;
-import DataAlignmentAndFusionApplication.domain.User;
+import DataAlignmentAndFusionApplication.model.entity.User;
 import DataAlignmentAndFusionApplication.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;

@@ -1,4 +1,4 @@
-package DataAlignmentAndFusionApplication.DTO;
+package DataAlignmentAndFusionApplication.model.DTO;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;

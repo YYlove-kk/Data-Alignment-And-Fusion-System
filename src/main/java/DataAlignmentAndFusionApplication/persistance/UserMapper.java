@@ -1,7 +1,7 @@
 
 package DataAlignmentAndFusionApplication.persistance;
 
-import DataAlignmentAndFusionApplication.domain.User;
+import DataAlignmentAndFusionApplication.model.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.springframework.stereotype.Repository;
 
