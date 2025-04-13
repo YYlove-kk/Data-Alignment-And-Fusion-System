@@ -25,4 +25,5 @@ public class AlgorithmFactory {
         // 获取策略实现
         return strategyMap.get(algorithmType);
     }
+
 }
