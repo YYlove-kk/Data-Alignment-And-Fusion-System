@@ -1,5 +1,5 @@
 
-package DataAlignmentAndFusionApplication.persistance;
+package DataAlignmentAndFusionApplication.mapper;
 
 import DataAlignmentAndFusionApplication.model.entity.User;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;

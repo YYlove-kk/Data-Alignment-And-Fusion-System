@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-@Service
+@Service("uploadService")
 public class UploadServiceImpl implements UploadService {
     @Autowired
     private UploadRecordMapper recordMapper;

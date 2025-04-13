@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
 
 
-@Service
+@Service("dataSourceService")
 public class DataSourceServiceImpl
         extends ServiceImpl<DataSourceMapper, DataSource>
         implements DataSourceService {

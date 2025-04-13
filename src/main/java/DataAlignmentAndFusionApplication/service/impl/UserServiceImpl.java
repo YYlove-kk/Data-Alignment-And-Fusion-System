@@ -3,7 +3,7 @@ package DataAlignmentAndFusionApplication.service.impl;
 import DataAlignmentAndFusionApplication.model.DTO.UserRegistDTO;
 import DataAlignmentAndFusionApplication.common.CommonResponse;
 import DataAlignmentAndFusionApplication.model.entity.User;
-import DataAlignmentAndFusionApplication.persistance.UserMapper;
+import DataAlignmentAndFusionApplication.mapper.UserMapper;
 import DataAlignmentAndFusionApplication.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;

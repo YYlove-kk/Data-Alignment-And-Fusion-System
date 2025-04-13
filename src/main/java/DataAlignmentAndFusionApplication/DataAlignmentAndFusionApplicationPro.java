@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan("DataAlignmentAndFusionApplication.persistance")
+@MapperScan("DataAlignmentAndFusionApplication.mapper")
 public class DataAlignmentAndFusionApplicationPro {
     public static void main(String[] args) {
         SpringApplication.run(DataAlignmentAndFusionApplicationPro.class, args);

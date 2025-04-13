@@ -1,5 +1,6 @@
 package DataAlignmentAndFusionApplication.common;
 
+import DataAlignmentAndFusionApplication.model.enums.ResponseCode;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Getter;
