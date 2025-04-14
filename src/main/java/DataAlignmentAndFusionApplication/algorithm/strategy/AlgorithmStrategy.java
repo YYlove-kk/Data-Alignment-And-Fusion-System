@@ -1,6 +1,6 @@
 package DataAlignmentAndFusionApplication.algorithm.strategy;
 
-import DataAlignmentAndFusionApplication.algorithm.Data.AlignmentData;
+import DataAlignmentAndFusionApplication.algorithm.data.AlignmentData;
 
 
 import java.util.Map;

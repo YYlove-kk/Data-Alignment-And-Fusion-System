@@ -1,6 +1,6 @@
 package DataAlignmentAndFusionApplication.algorithm.strategy.impl;
 
-import DataAlignmentAndFusionApplication.algorithm.Data.AlignmentData;
+import DataAlignmentAndFusionApplication.algorithm.data.AlignmentData;
 import DataAlignmentAndFusionApplication.algorithm.strategy.AlgorithmStrategy;
 import org.springframework.stereotype.Component;
 

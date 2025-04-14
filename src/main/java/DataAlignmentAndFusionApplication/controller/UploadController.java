@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/upload")
+@RequestMapping("/upload")
 public class UploadController {
     @Autowired
     private UploadService uploadService;

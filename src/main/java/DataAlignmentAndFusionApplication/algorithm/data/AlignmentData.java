@@ -1,4 +1,4 @@
-package DataAlignmentAndFusionApplication.algorithm.Data;
+package DataAlignmentAndFusionApplication.algorithm.data;
 
 import lombok.Data;
 
