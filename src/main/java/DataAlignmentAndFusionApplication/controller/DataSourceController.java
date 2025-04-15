@@ -1,6 +1,6 @@
 package DataAlignmentAndFusionApplication.controller;
 
-import DataAlignmentAndFusionApplication.model.DTO.DataSourceDTO;
+import DataAlignmentAndFusionApplication.model.dto.DataSourceDTO;
 import DataAlignmentAndFusionApplication.model.vo.DataSourceVO;
 import DataAlignmentAndFusionApplication.service.DataSourceService;
 import DataAlignmentAndFusionApplication.util.Result;

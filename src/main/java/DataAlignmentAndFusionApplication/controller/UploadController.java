@@ -1,7 +1,7 @@
 package DataAlignmentAndFusionApplication.controller;
 
-import DataAlignmentAndFusionApplication.model.DTO.FileUploadDTO;
-import DataAlignmentAndFusionApplication.model.DTO.UploadResultDTO;
+import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
+import DataAlignmentAndFusionApplication.model.dto.UploadResultDTO;
 import DataAlignmentAndFusionApplication.model.vo.UploadRecordVO;
 import DataAlignmentAndFusionApplication.service.UploadService;
 import DataAlignmentAndFusionApplication.util.Result;
@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/upload")
+@RequestMapping("/api/upload")
 public class UploadController {
     @Autowired
     private UploadService uploadService;

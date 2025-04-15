@@ -1,7 +1,7 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
-import DataAlignmentAndFusionApplication.mapper.DataSourceMapper;
-import DataAlignmentAndFusionApplication.model.DTO.DataSourceDTO;
+import DataAlignmentAndFusionApplication.mapper.module.DataSourceMapper;
+import DataAlignmentAndFusionApplication.model.dto.DataSourceDTO;
 import DataAlignmentAndFusionApplication.model.entity.DataSource;
 import DataAlignmentAndFusionApplication.model.vo.DataSourceVO;
 import DataAlignmentAndFusionApplication.service.DataSourceService;

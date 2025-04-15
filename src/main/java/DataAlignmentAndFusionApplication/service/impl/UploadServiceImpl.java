@@ -1,8 +1,8 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
-import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
-import DataAlignmentAndFusionApplication.model.DTO.FileUploadDTO;
-import DataAlignmentAndFusionApplication.model.DTO.UploadResultDTO;
+import DataAlignmentAndFusionApplication.mapper.module.UploadRecordMapper;
+import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
+import DataAlignmentAndFusionApplication.model.dto.UploadResultDTO;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.service.UploadService;
 import DataAlignmentAndFusionApplication.util.Result;

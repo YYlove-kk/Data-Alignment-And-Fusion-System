@@ -1,6 +1,6 @@
 package DataAlignmentAndFusionApplication.service;
 
-import DataAlignmentAndFusionApplication.model.DTO.DataSourceDTO;
+import DataAlignmentAndFusionApplication.model.dto.DataSourceDTO;
 import DataAlignmentAndFusionApplication.model.vo.DataSourceVO;
 import DataAlignmentAndFusionApplication.util.Result;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

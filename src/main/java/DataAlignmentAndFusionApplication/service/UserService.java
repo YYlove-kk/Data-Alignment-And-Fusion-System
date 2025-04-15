@@ -1,6 +1,6 @@
 package DataAlignmentAndFusionApplication.service;
 
-import DataAlignmentAndFusionApplication.model.DTO.UserRegistDTO;
+import DataAlignmentAndFusionApplication.model.dto.UserRegistDTO;
 import DataAlignmentAndFusionApplication.common.CommonResponse;
 import DataAlignmentAndFusionApplication.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;

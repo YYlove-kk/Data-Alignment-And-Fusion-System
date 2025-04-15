@@ -1,18 +1,17 @@
 package DataAlignmentAndFusionApplication.controller;
 
-import DataAlignmentAndFusionApplication.model.DTO.AlignmentConfigDTO;
-import DataAlignmentAndFusionApplication.model.DTO.AlignmentExecuteDTO;
+import DataAlignmentAndFusionApplication.model.dto.AlignmentConfigDTO;
+import DataAlignmentAndFusionApplication.model.dto.AlignmentExecuteDTO;
 import DataAlignmentAndFusionApplication.model.vo.AlignmentResultVO;
 import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.service.AlignmentService;
 import DataAlignmentAndFusionApplication.util.Result;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/alignment")
+@RequestMapping("/api/alignment")
 @RequiredArgsConstructor
 public class AlignmentController {
     private final AlignmentService alignmentService;

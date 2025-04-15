@@ -1,8 +1,8 @@
 package DataAlignmentAndFusionApplication.controller;
 
 
-import DataAlignmentAndFusionApplication.model.DTO.UserLoginDTO;
-import DataAlignmentAndFusionApplication.model.DTO.UserRegistDTO;
+import DataAlignmentAndFusionApplication.model.dto.UserLoginDTO;
+import DataAlignmentAndFusionApplication.model.dto.UserRegistDTO;
 import DataAlignmentAndFusionApplication.common.CommonResponse;
 import DataAlignmentAndFusionApplication.model.entity.User;
 import DataAlignmentAndFusionApplication.service.UserService;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 @CrossOrigin
 @RestController
-@RequestMapping("/users")
+@RequestMapping("/api/users")
 public class UserController {
 	@Autowired
 	private UserService userService;

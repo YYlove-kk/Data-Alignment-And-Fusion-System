@@ -1,7 +1,7 @@
 package DataAlignmentAndFusionApplication.service;
 
-import DataAlignmentAndFusionApplication.model.DTO.FileUploadDTO;
-import DataAlignmentAndFusionApplication.model.DTO.UploadResultDTO;
+import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
+import DataAlignmentAndFusionApplication.model.dto.UploadResultDTO;
 import DataAlignmentAndFusionApplication.util.Result;
 
 

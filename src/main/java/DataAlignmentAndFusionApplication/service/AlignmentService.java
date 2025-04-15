@@ -1,7 +1,7 @@
 package DataAlignmentAndFusionApplication.service;
 
-import DataAlignmentAndFusionApplication.model.DTO.AlignmentConfigDTO;
-import DataAlignmentAndFusionApplication.model.DTO.AlignmentExecuteDTO;
+import DataAlignmentAndFusionApplication.model.dto.AlignmentConfigDTO;
+import DataAlignmentAndFusionApplication.model.dto.AlignmentExecuteDTO;
 import DataAlignmentAndFusionApplication.model.entity.AlignmentConfig;
 import DataAlignmentAndFusionApplication.model.vo.AlignmentResultVO;
 import DataAlignmentAndFusionApplication.model.vo.PageVO;
