@@ -1,4 +1,4 @@
-package generator.service;
+package DataAlignmentAndFusionApplication.service;
 
 import DataAlignmentAndFusionApplication.model.entity.AlignmentConfig;
 import com.baomidou.mybatisplus.extension.service.IService;

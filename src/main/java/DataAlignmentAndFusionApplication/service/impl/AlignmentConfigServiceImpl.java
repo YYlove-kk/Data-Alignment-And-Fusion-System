@@ -1,8 +1,8 @@
-package generator.service.impl;
+package DataAlignmentAndFusionApplication.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import DataAlignmentAndFusionApplication.model.entity.AlignmentConfig;
-import generator.service.AlignmentConfigService;
+import DataAlignmentAndFusionApplication.service.AlignmentConfigService;
 import DataAlignmentAndFusionApplication.mapper.module.AlignmentConfigMapper;
 import org.springframework.stereotype.Service;
 

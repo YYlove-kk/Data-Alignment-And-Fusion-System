@@ -1,8 +1,8 @@
-package generator.service.impl;
+package DataAlignmentAndFusionApplication.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
-import generator.service.UploadRecordService;
+import DataAlignmentAndFusionApplication.service.UploadRecordService;
 import DataAlignmentAndFusionApplication.mapper.module.UploadRecordMapper;
 import org.springframework.stereotype.Service;
 
