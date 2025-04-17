@@ -9,5 +9,5 @@ import java.util.List;
 @Mapper
 public interface AlignmentDetailMapper {
     // 根据结果ID查询详情列表
-    List<AlignmentDetail> selectByResultId(@Param("resultId") Long resultId);
+//    List<AlignmentDetail> selectByResultId(@Param("resultId") Long resultId);
 }

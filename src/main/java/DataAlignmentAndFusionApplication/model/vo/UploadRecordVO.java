@@ -1,6 +1,5 @@
 package DataAlignmentAndFusionApplication.model.vo;
 
-import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DataAlignmentAndFusionApplication.mapper.module.AlignmentConfigMapper">
+
+    <resultMap id="BaseResultMap" type="DataAlignmentAndFusionApplication.model.entity.AlignmentConfig">
+            <id property="id" column="id" />
+            <result property="userId" column="user_id" />
+            <result property="timeSeriesAlgo" column="time_series_algo" />
+            <result property="timeGranularity" column="time_granularity" />
+            <result property="semanticModel" column="semantic_model" />
+            <result property="similarityThreshold" column="similarity_threshold" />
+            <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,user_id,time_series_algo,time_granularity,semantic_model,similarity_threshold,
+        create_time
+    </sql>
+</mapper>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DataAlignmentAndFusionApplication.mapper.module.DataSourceMapper">
+
+    <resultMap id="BaseResultMap" type="DataAlignmentAndFusionApplication.model.entity.DataSource">
+            <id property="id" column="id" />
+            <result property="name" column="name" />
+            <result property="modalityType" column="modality_type" />
+            <result property="institution" column="institution" />
+            <result property="description" column="description" />
+            <result property="creator" column="creator" />
+            <result property="createTime" column="create_time" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,name,modality_type,institution,description,creator,
+        create_time,update_time
+    </sql>
+</mapper>

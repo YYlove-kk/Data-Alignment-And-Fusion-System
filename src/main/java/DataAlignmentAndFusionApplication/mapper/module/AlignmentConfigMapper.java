@@ -1,11 +1,18 @@
 package DataAlignmentAndFusionApplication.mapper.module;
 
 import DataAlignmentAndFusionApplication.model.entity.AlignmentConfig;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-@Mapper
-public interface AlignmentConfigMapper {
-    // 查询用户最新配置
-    AlignmentConfig selectLatestByUser(@Param("userId") Long userId);
+/**
+* @author 29857
+* @description 针对表【alignment_config】的数据库操作Mapper
+* @createDate 2025-04-17 20:07:18
+* @Entity DataAlignmentAndFusionApplication.model.entity.AlignmentConfig
+*/
+public interface AlignmentConfigMapper extends BaseMapper<AlignmentConfig> {
+
 }
+
+
+
+

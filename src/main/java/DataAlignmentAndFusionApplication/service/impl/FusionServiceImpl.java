@@ -4,7 +4,7 @@ import DataAlignmentAndFusionApplication.algorithm.data.FusionResult;
 import DataAlignmentAndFusionApplication.algorithm.data.GraphNode;
 import DataAlignmentAndFusionApplication.algorithm.strategy.GraphBuildStrategy;
 import DataAlignmentAndFusionApplication.algorithm.strategy.GraphFusionStrategy;
-import DataAlignmentAndFusionApplication.mapper.graph.KgConstructionRecordMapper;
+import DataAlignmentAndFusionApplication.mapper.graph.KgConstructionMapper;
 import DataAlignmentAndFusionApplication.mapper.graph.KgFusionRecordMapper;
 import DataAlignmentAndFusionApplication.model.dto.ConstructionDTO;
 import DataAlignmentAndFusionApplication.model.dto.FusionDTO;

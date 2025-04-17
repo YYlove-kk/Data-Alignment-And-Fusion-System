@@ -1,11 +1,8 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.algorithm.strategy.AlgorithmStrategy;
-import DataAlignmentAndFusionApplication.mapper.module.AlignmentConfigMapper;
-import DataAlignmentAndFusionApplication.mapper.module.AlignmentResultMapper;
 import DataAlignmentAndFusionApplication.model.dto.AlignmentConfigDTO;
 import DataAlignmentAndFusionApplication.model.dto.AlignmentExecuteDTO;
-import DataAlignmentAndFusionApplication.model.entity.AlignmentConfig;
 import DataAlignmentAndFusionApplication.model.vo.AlignmentResultVO;
 import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.service.AlignmentService;

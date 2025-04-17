@@ -1,9 +1,9 @@
 package DataAlignmentAndFusionApplication.mapper.graph;
 
-import DataAlignmentAndFusionApplication.model.entity.KgNodeDetail;
+import DataAlignmentAndFusionApplication.model.entity.KgNode;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-public interface KgNodeDetailMapper extends BaseMapper<KgNodeDetail> {
+public interface KgNodeMapper extends BaseMapper<KgNode> {
 
     // 批量插入节点（MyBatis-Plus的insertBatch在某些版本需自定义）
 //    @Insert("<script>" +

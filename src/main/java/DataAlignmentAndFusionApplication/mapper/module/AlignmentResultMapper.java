@@ -1,18 +1,18 @@
 package DataAlignmentAndFusionApplication.mapper.module;
 
-import DataAlignmentAndFusionApplication.model.entity.AlignmentDetail;
 import DataAlignmentAndFusionApplication.model.entity.AlignmentResult;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import java.util.List;
+/**
+* @author 29857
+* @description 针对表【alignment_result】的数据库操作Mapper
+* @createDate 2025-04-17 20:07:11
+* @Entity DataAlignmentAndFusionApplication.model.entity.AlignmentResult
+*/
+public interface AlignmentResultMapper extends BaseMapper<AlignmentResult> {
 
-@Mapper
-public interface AlignmentResultMapper {
-    // 批量插入对齐详情（需在XML中实现）
-    void insertBatchDetails(@Param("list") List<AlignmentDetail> details);
-
-    // 分页查询（使用MyBatis-Plus原生分页）
-    Page<AlignmentResult> selectPageByConfig(Page<AlignmentResult> page, @Param("configId") Long configId);
 }
+
+
+
+

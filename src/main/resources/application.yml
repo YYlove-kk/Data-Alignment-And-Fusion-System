@@ -16,7 +16,7 @@ spring:
   datasource:
     driverClassName: com.mysql.cj.jdbc.Driver
 #    #本地数据库
-    url: jdbc:mysql://127.0.0.1:3307/workshop?useUnicode=true&characterEncoding=utf-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://127.0.0.1:3306/dafs?useUnicode=true&characterEncoding=utf-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
 #    云端数据库
