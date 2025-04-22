@@ -1,8 +1,6 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.model.vo.HomeOverviewVO;
-import DataAlignmentAndFusionApplication.service.AlignmentService;
-import DataAlignmentAndFusionApplication.service.AnalysisService;
 import DataAlignmentAndFusionApplication.service.HomeAggregateService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -10,11 +8,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class HomeAggregateServiceImpl implements HomeAggregateService {
-    private final UploadService uploadService;
-    private final AlignmentService alignmentService;
-    //    private final FusionService fusionService;
-    private final AnalysisService analysisService;
-//    private final GraphVisualService visualService;
 
     @Override
     public HomeOverviewVO getHomeOverview() {

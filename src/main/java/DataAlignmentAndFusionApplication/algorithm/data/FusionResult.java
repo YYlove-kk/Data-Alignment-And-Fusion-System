@@ -26,7 +26,7 @@ public class FusionResult {
         record.setConflictCount(this.conflicts != null ? this.conflicts.size() : 0);
         record.setNewNodeCount(calculateNewNodes());
 //        record.setSnapshot(buildSnapshot());
-        record.setCreateTime(LocalDateTime.now());
+//        record.setCreateTime(LocalDateTime.now());
         return record;
     }
 

@@ -1,13 +1,18 @@
 package DataAlignmentAndFusionApplication.mapper.module;
 
 import DataAlignmentAndFusionApplication.model.entity.AlignmentDetail;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
-import java.util.List;
+/**
+* @author 29857
+* @description 针对表【alignment_detail】的数据库操作Mapper
+* @createDate 2025-04-22 23:39:40
+* @Entity DataAlignmentAndFusionApplication.model.entity.AlignmentDetail
+*/
+public interface AlignmentDetailMapper extends BaseMapper<AlignmentDetail> {
 
-@Mapper
-public interface AlignmentDetailMapper {
-    // 根据结果ID查询详情列表
-//    List<AlignmentDetail> selectByResultId(@Param("resultId") Long resultId);
 }
+
+
+
+

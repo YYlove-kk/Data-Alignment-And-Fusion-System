@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DataAlignmentAndFusionApplication.mapper.module.AlignmentDetailMapper">
+
+    <resultMap id="BaseResultMap" type="DataAlignmentAndFusionApplication.model.entity.AlignmentDetail">
+            <id property="id" column="id" />
+            <result property="resultId" column="result_id" />
+            <result property="sourceData" column="source_data" />
+            <result property="targetData" column="target_data" />
+            <result property="similarity" column="similarity" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,result_id,source_data,target_data,similarity
+    </sql>
+</mapper>

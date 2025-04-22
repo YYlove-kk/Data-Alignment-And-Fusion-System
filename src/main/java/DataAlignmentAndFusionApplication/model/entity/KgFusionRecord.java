@@ -3,30 +3,56 @@ package DataAlignmentAndFusionApplication.model.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import jakarta.validation.constraints.NotNull;
+import java.util.Date;
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
+/**
+ * 
+ * @TableName kg_fusion_record
+ */
+@TableName(value ="kg_fusion_record")
 @Data
-@TableName("kg_fusion_record")
 public class KgFusionRecord {
+    /**
+     * 
+     */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    @NotNull
-    private Long mainGraphId;       // 主图谱ID
+    /**
+     * 
+     */
+    private Long mainGraphId;
 
-    @NotNull
-    private Long subGraphId;       // 被融合的子图谱ID
+    /**
+     * 
+     */
+    private Long subGraphId;
 
-    @NotNull
-    private String strategyType;   // 融合策略（OWL/RDF等）
+    /**
+     * 
+     */
+    private String strategyType;
 
-    private String conflictDetails; // 冲突详情（JSON存储）
+    /**
+     * 
+     */
+    private Object conflictDetails;
 
-    private Integer newNodeCount;  // 新增节点数
-    private Integer conflictCount; // 冲突总数
+    /**
+     * 
+     */
+    private Integer newNodeCount;
 
-    private LocalDateTime createTime;
+    /**
+     * 
+     */
+    private Integer conflictCount;
+
+    /**
+     * 
+     */
+    private Date createTime;
+
+
 }

@@ -2,10 +2,6 @@ package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.algorithm.data.FusionResult;
 import DataAlignmentAndFusionApplication.algorithm.data.GraphNode;
-import DataAlignmentAndFusionApplication.algorithm.strategy.GraphBuildStrategy;
-import DataAlignmentAndFusionApplication.algorithm.strategy.GraphFusionStrategy;
-import DataAlignmentAndFusionApplication.mapper.graph.KgConstructionMapper;
-import DataAlignmentAndFusionApplication.mapper.graph.KgFusionRecordMapper;
 import DataAlignmentAndFusionApplication.model.dto.ConstructionDTO;
 import DataAlignmentAndFusionApplication.model.dto.FusionDTO;
 import DataAlignmentAndFusionApplication.model.vo.*;
@@ -16,14 +12,7 @@ import java.util.Map;
 
 public class FusionServiceImpl implements FusionService {
 
-//    private final GraphBuildStrategy buildStrategy;
-//    private final GraphFusionStrategy fusionStrategy;
-//    private final KgConstructionRecordMapper constructionRecordMapper;
-//    private final KgFusionRecordMapper fusionRecordMapper;
 
-    // 新增节点管理依赖
-//    private final GraphNodeMapper nodeMapper;
-//    private final GraphRelationMapper relationMapper;
     @Override
     public GraphVO buildKnowledgeGraph(ConstructionDTO dto) {
         return null;

@@ -1,6 +1,5 @@
 package DataAlignmentAndFusionApplication.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.util.Date;
@@ -8,15 +7,15 @@ import lombok.Data;
 
 /**
  * 
- * @TableName kg_construction
+ * @TableName analysis_record
  */
-@TableName(value ="kg_construction")
+@TableName(value ="analysis_record")
 @Data
-public class KgConstruction {
+public class AnalysisRecord {
     /**
      * 
      */
-    @TableId(type = IdType.AUTO)
+    @TableId
     private Long id;
 
     /**
@@ -27,37 +26,30 @@ public class KgConstruction {
     /**
      * 
      */
-    private String datasetId;
+    private String analysisType;
 
     /**
      * 
      */
-    private String constructionMode;
+    private Object dataSources;
 
     /**
      * 
      */
-    private Object config;
+    private String analysisMode;
 
     /**
      * 
      */
-    private Object result;
+    private Object parameters;
 
     /**
      * 
      */
-    private String graphId;
-
-    /**
-     * 
-     */
-    private String recordType;
+    private Object resultStats;
 
     /**
      * 
      */
     private Date createTime;
-
-
 }

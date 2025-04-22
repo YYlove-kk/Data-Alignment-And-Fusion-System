@@ -1,5 +1,6 @@
 package DataAlignmentAndFusionApplication.model.vo;
 
+import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -32,7 +33,7 @@ public class UploadRecordVO {
         vo.setFileName(entity.getFileName());
         vo.setFileSize(formatFileSize(entity.getFileSize())); // 格式化文件大小
         vo.setStatus(entity.getStatus());
-        vo.setUploadTime(entity.getUploadTime());
+//        vo.setUploadTime(entity.getUploadTime());
         return vo;
     }
 

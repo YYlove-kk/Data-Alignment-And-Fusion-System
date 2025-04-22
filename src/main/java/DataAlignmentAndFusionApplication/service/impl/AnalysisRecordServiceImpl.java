@@ -3,21 +3,32 @@ package DataAlignmentAndFusionApplication.service.impl;
 import DataAlignmentAndFusionApplication.algorithm.strategy.AnalysisRequest;
 import DataAlignmentAndFusionApplication.algorithm.strategy.AnalysisStrategy;
 import DataAlignmentAndFusionApplication.algorithm.strategy.AnalysisStrategyFactory;
-import DataAlignmentAndFusionApplication.mapper.module.PatientAnalysisRecordMapper;
 import DataAlignmentAndFusionApplication.model.dto.AnalysisDTO;
-import DataAlignmentAndFusionApplication.model.entity.PatientAnalysisRecord;
 import DataAlignmentAndFusionApplication.model.vo.AnalysisResultVO;
-import DataAlignmentAndFusionApplication.service.AnalysisService;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import lombok.RequiredArgsConstructor;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import DataAlignmentAndFusionApplication.model.entity.AnalysisRecord;
+import DataAlignmentAndFusionApplication.service.AnalysisRecordService;
+import DataAlignmentAndFusionApplication.mapper.module.AnalysisRecordMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+* @author 29857
+* @description 针对表【analysis_record】的数据库操作Service实现
+* @createDate 2025-04-22 23:49:13
+*/
 @Service
-@RequiredArgsConstructor
-public class AnalysisServiceImpl implements AnalysisService {
-    private final PatientAnalysisRecordMapper recordMapper;
+public class AnalysisRecordServiceImpl extends ServiceImpl<AnalysisRecordMapper, AnalysisRecord>
+    implements AnalysisRecordService{
+    private final AnalysisRecordMapper recordMapper;
     private final AnalysisStrategyFactory strategyFactory;
+
+    public AnalysisRecordServiceImpl(AnalysisRecordMapper recordMapper, AnalysisStrategyFactory strategyFactory) {
+        this.recordMapper = recordMapper;
+        this.strategyFactory = strategyFactory;
+    }
+
 
     @Transactional
     @Override
@@ -36,7 +47,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     @Override
-    public Page<PatientAnalysisRecord> getHistory(Long userId, Integer page, Integer size) {
+    public Page<AnalysisRecord> getHistory(Long userId, Integer page, Integer size) {
         return null;
     }
 
@@ -45,7 +56,7 @@ public class AnalysisServiceImpl implements AnalysisService {
     }
 
     private void saveAnalysisRecord(AnalysisDTO dto, AnalysisResultVO result) {
-        PatientAnalysisRecord record = new PatientAnalysisRecord();
+        AnalysisRecord record = new AnalysisRecord();
 //        record.setUserId(dto.getUserId());
 //        record.setAnalysisType(dto.getAnalysisType());
 //        record.setDataSources(dto.getDataSources());
@@ -54,4 +65,9 @@ public class AnalysisServiceImpl implements AnalysisService {
 //        record.setResultStats(result.getStats());
         recordMapper.insert(record);
     }
+
 }
+
+
+
+

@@ -1,5 +1,6 @@
 package DataAlignmentAndFusionApplication.model.vo;
 
+import DataAlignmentAndFusionApplication.model.entity.DataSource;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -30,7 +31,7 @@ public class DataSourceVO {
         vo.setInstitution(entity.getInstitution());
         vo.setDescription(entity.getDescription());
         vo.setCreator(entity.getCreator());
-        vo.setCreateTime(entity.getCreateTime());
+//        vo.setCreateTime(entity.getCreateTime());
 
         return vo;
     }

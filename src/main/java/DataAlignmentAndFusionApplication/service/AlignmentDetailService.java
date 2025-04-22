@@ -2,13 +2,19 @@ package DataAlignmentAndFusionApplication.service;
 
 import DataAlignmentAndFusionApplication.model.dto.AlignmentConfigDTO;
 import DataAlignmentAndFusionApplication.model.dto.AlignmentExecuteDTO;
+import DataAlignmentAndFusionApplication.model.entity.AlignmentConfig;
 import DataAlignmentAndFusionApplication.model.vo.AlignmentResultVO;
 import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.util.Result;
-import org.apache.ibatis.annotations.Mapper;
+import DataAlignmentAndFusionApplication.model.entity.AlignmentDetail;
+import com.baomidou.mybatisplus.extension.service.IService;
 
-@Mapper
-public interface AlignmentService {
+/**
+* @author 29857
+* @description 针对表【alignment_detail】的数据库操作Service
+* @createDate 2025-04-22 23:39:40
+*/
+public interface AlignmentDetailService extends IService<AlignmentDetail> {
     /**
      * 执行数据对齐
      */
@@ -35,4 +41,5 @@ public interface AlignmentService {
      * 分页查询历史记录
      */
     Result<PageVO<AlignmentResultVO>> listHistory(Long userId, Integer page, Integer size);
+
 }

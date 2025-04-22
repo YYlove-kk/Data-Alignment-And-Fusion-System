@@ -3,6 +3,8 @@ package DataAlignmentAndFusionApplication.controller;
 import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
 import DataAlignmentAndFusionApplication.model.dto.UploadResultDTO;
 import DataAlignmentAndFusionApplication.model.vo.UploadRecordVO;
+import DataAlignmentAndFusionApplication.service.UploadRecordService;
+import DataAlignmentAndFusionApplication.service.impl.UploadRecordServiceImpl;
 import DataAlignmentAndFusionApplication.util.Result;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,12 +14,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/upload")
 public class UploadController {
     @Autowired
-    private UploadService uploadService;
+    private UploadRecordService uploadService;
 
     // 文件上传接口
     @PostMapping("/file")
     public Result<UploadResultDTO> uploadFile(@ModelAttribute FileUploadDTO dto) {
-        return uploadService.upload(dto);
+//        return uploadService.upload(dto);
+        return null;
     }
 
     // 获取已上传列表

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DataAlignmentAndFusionApplication.mapper.graph.KgFusionRecordMapper">
+
+    <resultMap id="BaseResultMap" type="DataAlignmentAndFusionApplication.model.entity.KgFusionRecord">
+            <id property="id" column="id" />
+            <result property="mainGraphId" column="main_graph_id" />
+            <result property="subGraphId" column="sub_graph_id" />
+            <result property="strategyType" column="strategy_type" />
+            <result property="conflictDetails" column="conflict_details" />
+            <result property="newNodeCount" column="new_node_count" />
+            <result property="conflictCount" column="conflict_count" />
+            <result property="createTime" column="create_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,main_graph_id,sub_graph_id,strategy_type,conflict_details,new_node_count,
+        conflict_count,create_time
+    </sql>
+</mapper>
