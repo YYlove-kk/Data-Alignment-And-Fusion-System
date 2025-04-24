@@ -9,6 +9,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.service.UploadRecordService;
 import DataAlignmentAndFusionApplication.mapper.module.UploadRecordMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -20,7 +21,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Collections;
 
 /**
 * @author 29857
@@ -31,8 +31,9 @@ import java.util.Collections;
 public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, UploadRecord>
     implements UploadRecordService{
 
-    @Value("${schema.registry}")
+//    @Value("${schema.registry}")
     private String schemaRegistry;
+
 
     private final Path rawDir = Paths.get("/data/raw");
     private final Path cleanDir = Paths.get("/data/clean");
