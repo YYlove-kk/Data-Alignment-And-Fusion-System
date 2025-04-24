@@ -1,6 +1,6 @@
 package DataAlignmentAndFusionApplication.service;
 
-import DataAlignmentAndFusionApplication.common.CommonResponse;
+import DataAlignmentAndFusionApplication.common.CommonResp;
 import DataAlignmentAndFusionApplication.model.dto.UserRegistDTO;
 import DataAlignmentAndFusionApplication.model.entity.User;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -12,9 +12,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface UserService extends IService<User> {
     //用户登录
-    CommonResponse<DataAlignmentAndFusionApplication.model.entity.User> login(String username, String password);
+    CommonResp<User> login(String username, String password);
 
     DataAlignmentAndFusionApplication.model.entity.User getUserByUserName(String username);
 
-    CommonResponse<DataAlignmentAndFusionApplication.model.entity.User> register(UserRegistDTO userRegisterDto);
+    CommonResp<User> register(UserRegistDTO userRegisterDto);
 }

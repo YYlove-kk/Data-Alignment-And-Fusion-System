@@ -1,7 +1,7 @@
 package DataAlignmentAndFusionApplication.util;
 
 
-import DataAlignmentAndFusionApplication.common.CommonResponse;
+import DataAlignmentAndFusionApplication.common.CommonResp;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,35 +24,35 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MissingServletRequestParameterException.class)
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public CommonResponse<Object> handleMissingServletRequestParameterException(MissingServletRequestParameterException e){
+    public CommonResp<Object> handleMissingServletRequestParameterException(MissingServletRequestParameterException e){
         logger.error(e.getMessage());
-        return CommonResponse.createForError("缺少参数");
+        return CommonResp.createForError("缺少参数");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public CommonResponse<Object> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){
+    public CommonResp<Object> handleMethodArgumentNotValidException(MethodArgumentNotValidException e){
         logger.error(e.getMessage());
-        return CommonResponse.createForError("参数不合法");
+        return CommonResp.createForError("参数不合法");
     }
 
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     @ResponseBody
-    public CommonResponse<Object> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e){
+    public CommonResp<Object> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e){
         logger.error(e.getMessage());
-        return CommonResponse.createForError("参数类型错误");
+        return CommonResp.createForError("参数类型错误");
     }
 
 
     @ExceptionHandler(ConstraintViolationException.class )
     @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
-    public CommonResponse<Object> handleConstraintViolationException(ConstraintViolationException e){
+    public CommonResp<Object> handleConstraintViolationException(ConstraintViolationException e){
         logger.error(e.getMessage());
-        return CommonResponse.createForError(e.getMessage());
+        return CommonResp.createForError(e.getMessage());
     }
 
     //异常从上往下一次匹配，当之前的所有异常都没有匹配时匹配这个异常
@@ -60,10 +60,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(code = HttpStatus.INTERNAL_SERVER_ERROR)
     @ResponseBody
-    public CommonResponse<Object> handleException(Exception e){
+    public CommonResp<Object> handleException(Exception e){
         logger.error(e.getMessage());
         e.printStackTrace();
-        return CommonResponse.createForError("服务器异常");
+        return CommonResp.createForError("服务器异常");
     }
 
 }

@@ -12,4 +12,6 @@ public class DataSourceDTO {
     private String institution;
 
     private String description;
+
+    private String filePath;
 }

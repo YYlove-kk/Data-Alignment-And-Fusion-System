@@ -13,7 +13,7 @@ public class HomeAggregateServiceImpl implements HomeAggregateService {
     public HomeOverviewVO getHomeOverview() {
         HomeOverviewVO vo = new HomeOverviewVO();
 
-//        // 1. 获取各模块统计
+        // 1. 获取各模块统计
 //        vo.setUploadStats(uploadService.getUploadStats());
 //        vo.setAlignmentStats(alignmentService.getAlignmentStats());
 //        vo.setGraphStats(fusionService.getGraphStats());
@@ -31,7 +31,7 @@ public class HomeAggregateServiceImpl implements HomeAggregateService {
 //                uploadService.getRecentActivities(),
 //                alignmentService.getRecentActivities()
 //        ));
-//
+
         return vo;
     }
 //

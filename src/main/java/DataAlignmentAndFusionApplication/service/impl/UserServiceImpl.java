@@ -1,6 +1,6 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
-import DataAlignmentAndFusionApplication.common.CommonResponse;
+import DataAlignmentAndFusionApplication.common.CommonResp;
 import DataAlignmentAndFusionApplication.model.dto.UserRegistDTO;
 import DataAlignmentAndFusionApplication.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -22,18 +22,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService {
     //登录
     @Override
-    public CommonResponse<DataAlignmentAndFusionApplication.model.entity.User> login(String username, String password){
+    public CommonResp<User> login(String username, String password){
 
         QueryWrapper<DataAlignmentAndFusionApplication.model.entity.User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username",username);
         DataAlignmentAndFusionApplication.model.entity.User user = getOne(queryWrapper);
 
         if(user == null){
-            return CommonResponse.createForError("用户名不存在");
+            return CommonResp.createForError("用户名不存在");
         }else if(user.getPassword().equals(password)) {
-            return CommonResponse.createForSuccess("success",user);
+            return CommonResp.createForSuccess("success",user);
         }else {
-            return CommonResponse.createForError("密码错误！");
+            return CommonResp.createForError("密码错误！");
         }
     }
 
@@ -45,13 +45,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public CommonResponse<DataAlignmentAndFusionApplication.model.entity.User> register(UserRegistDTO userRegisterDto) {
+    public CommonResp<User> register(UserRegistDTO userRegisterDto) {
         QueryWrapper<DataAlignmentAndFusionApplication.model.entity.User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("username", userRegisterDto.getUsername());
         DataAlignmentAndFusionApplication.model.entity.User user = baseMapper.selectOne(queryWrapper);
 
         if (user != null) {
-            return CommonResponse.createForError("用户已存在");
+            return CommonResp.createForError("用户已存在");
         } else {
             DataAlignmentAndFusionApplication.model.entity.User newUser = new DataAlignmentAndFusionApplication.model.entity.User();
             BeanUtils.copyProperties(userRegisterDto, newUser);
@@ -59,9 +59,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             // 注意：实际应用中需要对密码进行加密处理，例如使用 BCryptPasswordEncoder
             int result = baseMapper.insert(newUser);
             if (result == 1) {
-                return CommonResponse.createForSuccess("注册成功", newUser);
+                return CommonResp.createForSuccess("注册成功", newUser);
             } else {
-                return CommonResponse.createForError("注册失败");
+                return CommonResp.createForError("注册失败");
             }
         }
     }
