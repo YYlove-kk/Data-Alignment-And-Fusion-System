@@ -44,9 +44,25 @@ spring:
           enable:true
     default-encoding: UTF-8
 
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
 
+mq:
+  upload-to-cleaning: upload.cleaning.queue
+  cleaning-to-database: cleaning.database.queue
 
-#文件上传路径
-file:
-  upload-dir:
+#文件路径
+data:
+  upload-raw-dir: src/main/java/DataAlignmentAndFusionApplication/data/uploadData/raw
+  upload-clean-dir: src/main/java/DataAlignmentAndFusionApplication/data/uploadData/clean
+  upload-report-dir: src/main/java/DataAlignmentAndFusionApplication/data/uploadData/report
+  upload-output-dir: src/main/java/DataAlignmentAndFusionApplication/data/uploadData/output
+
+#算法路径
+algorithm:
+  data-ingest: src/main/java/DataAlignmentAndFusionApplication/algorithm/data_ingest.py
+
 

@@ -12,6 +12,8 @@ public class FileUploadDTO {
 
     private String institution;
 
+    private String schemaRegistryPath;
+
     /**
      * Spring接收上传文件
      */

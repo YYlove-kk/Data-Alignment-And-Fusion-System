@@ -1,0 +1,13 @@
+{
+  "年龄": "age",
+  "性别": "gender",
+  "就诊时间": "visit_time",
+  "初步诊断": "diagnosis",
+  "病人编号": "patient_id",
+  "姓名": "name",
+  "住院号": "hospital_id",
+  "入院时间": "admission_time",
+  "出院时间": "discharge_time",
+  "主诉": "chief_complaint",
+  "既往史": "history"
+}
