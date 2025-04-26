@@ -10,10 +10,13 @@ public class UploadMessage implements Serializable {
     private String cleanPath;
     private String schemaRegistryPath;
     private String reportDir;
+    private String cleanDir;
     private String outputDir;
     private String fileName;
     private String taskId;
     private String status;
+    private String modalityType;
+    private String institution;
 
     // RabbitMQ 反序列化用
     public UploadMessage() {}

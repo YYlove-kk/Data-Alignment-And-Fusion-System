@@ -1,12 +1,10 @@
 package DataAlignmentAndFusionApplication.service;
 
-import DataAlignmentAndFusionApplication.common.UploadResp;
 import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
 import DataAlignmentAndFusionApplication.model.dto.UploadMessage;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
-import DataAlignmentAndFusionApplication.model.vo.DataSourceVO;
+import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.util.Result;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -18,8 +16,11 @@ public interface UploadRecordService extends IService<UploadRecord> {
     // 文件上传方法，返回上传结果
     Result<String> uploadFileAndProcess(FileUploadDTO dto);
 
+    //轮询状态和outputPath
+    Result<UploadRecord> getTaskStatus(String taskId);
+
     // 获取已上传列表
-    Result<Page<UploadRecord>> getUploadList(Integer page, Integer size);
+    Result<PageVO<UploadRecord>> getUploadList(Integer page, Integer size);
 
     // 删除记录
     Result<Void> deleteRecord(Long id);
@@ -27,7 +28,5 @@ public interface UploadRecordService extends IService<UploadRecord> {
     void createWaitingRecord(UploadMessage message);
 
     void updateStatus(String taskId, String status);
-
-
 
 }

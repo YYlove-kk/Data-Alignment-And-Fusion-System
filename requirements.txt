@@ -1,0 +1,9 @@
+# Basic data processing
+pandas>=1.5.0
+openpyxl>=3.0.10    # Required for pandas to read .xlsx files
+
+# Data validation
+great_expectations>=0.16
+
+# Required for saving as .parquet format
+pyarrow>=12.0.0

@@ -10,14 +10,29 @@ public class AppConfig {
     @Value("${data.upload-raw-dir}")
     private String uploadRawDir;
 
-    @Value("${data.upload-clean-dir}")
-    private String uploadCleanDir;
-
     @Value("${data.upload-report-dir}")
     private String uploadReportDir;
 
+    @Value("${data.upload-clean-dir}")
+    private String uploadCleanDir;
+
     @Value("${data.upload-output-dir}")
     private String uploadOutputDir;
+
+    @Value("${algorithm.data-ingest}")
+    private String dataIngestPath;
+
+    @Value("${algorithm.image-embed}")
+    private String imageEmbedPath;
+
+    @Value("${algorithm.text-time-embed}")
+    private String textTimeEmbedPath;
+
+    @Value("${algorithm.interpreter-path}")
+    private String interpreterPath;
+
+    @Value("${schema-registry}")
+    private String schemaRegistryPath;
 
 
 }

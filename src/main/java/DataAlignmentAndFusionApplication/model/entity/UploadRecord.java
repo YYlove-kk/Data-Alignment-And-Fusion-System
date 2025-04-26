@@ -30,9 +30,14 @@ public class UploadRecord {
     private String rawPath;
 
     /**
-     * 清洗后文件路径
+     * 清洗结果输出路径
      */
-    private String cleanPath;
+    private String cleanDir;
+
+    /**
+     * 嵌入结果输出路径
+     */
+    private String outputDir;
 
     /**
      * 模式注册路径
@@ -43,11 +48,10 @@ public class UploadRecord {
      * 清洗报告路径
      */
     private String reportDir;
-
-    /**
-     * 清洗结果输出路径
-     */
-    private String outputDir;
+    //模态类型
+    private String modalityType;
+    //机构
+    private String institution;
 
     /**
      * 处理时间
