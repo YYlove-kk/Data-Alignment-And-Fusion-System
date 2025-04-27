@@ -1,35 +1,33 @@
 package DataAlignmentAndFusionApplication.controller;
 import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
-import DataAlignmentAndFusionApplication.model.vo.DataSourceVO;
-
+import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.service.UploadRecordService;
 import DataAlignmentAndFusionApplication.util.Result;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/upload")
 public class DataController {
-    private UploadRecordService uploadService;
+    private UploadRecordService uploadRecordService;
 
     // 上传文件
     @PostMapping("/data")
-    public Result<String> uploadFile(@ModelAttribute FileUploadDTO dto) {
+    public Result<String> uploadFile(@RequestBody FileUploadDTO dto) {
         // 调用上传服务
-        return uploadService.uploadFileAndProcess(dto);
+        return uploadRecordService.uploadFileAndProcess(dto);
     }
 
     // 获取已上传列表
     @GetMapping("/list")
-    public Result<Page<UploadRecord>> getUploadList(
+    public Result<PageVO<UploadRecord>> getUploadList(
             @RequestParam(required = false) Integer page,
             @RequestParam(required = false) Integer size) {
-        return uploadService.getUploadList(page, size);
+        return uploadRecordService.getUploadList(page, size);
     }
     // 删除上传记录
     @DeleteMapping("/{id}")
     public Result<Void> deleteUploadRecord(@PathVariable Long id) {
-        return uploadService.deleteRecord(id);
+        return uploadRecordService.deleteRecord(id);
     }
 }

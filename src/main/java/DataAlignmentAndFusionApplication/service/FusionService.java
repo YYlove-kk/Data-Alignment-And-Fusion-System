@@ -1,7 +1,4 @@
 package DataAlignmentAndFusionApplication.service;
-
-import DataAlignmentAndFusionApplication.algorithm.data.FusionResult;
-import DataAlignmentAndFusionApplication.algorithm.data.GraphNode;
 import DataAlignmentAndFusionApplication.model.dto.ConstructionDTO;
 import DataAlignmentAndFusionApplication.model.dto.FusionDTO;
 import DataAlignmentAndFusionApplication.model.vo.*;
@@ -16,10 +13,10 @@ public interface FusionService {
 
     //图谱融合
     FusionVO fuseGraphs(FusionDTO dto);
-    void saveFusionResult(FusionResult result);
+//    void saveFusionResult(FusionResult result);
 
     //节点管理
-    void batchSaveNodes(List<GraphNode> nodes, String graphId);
+//    void batchSaveNodes(List<GraphNode> nodes, String graphId);
     NodeDetailVO getNodeDetails(String nodeId, Long graphId);
     Map<String, Integer> getNodeTypeDistribution(String graphId);
 

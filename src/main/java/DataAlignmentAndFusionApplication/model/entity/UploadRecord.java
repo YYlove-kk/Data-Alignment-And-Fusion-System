@@ -24,6 +24,10 @@ public class UploadRecord {
      */
     private String taskId;
 
+    private String patientId;
+
+    private String fileName;
+
     /**
      * 原文件路径
      */
@@ -34,10 +38,13 @@ public class UploadRecord {
      */
     private String cleanDir;
 
+    private String cleanPath;
     /**
      * 嵌入结果输出路径
      */
     private String outputDir;
+
+    private String outputPath;
 
     /**
      * 模式注册路径

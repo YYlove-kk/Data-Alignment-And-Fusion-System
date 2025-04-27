@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class FileUploadDTO {
+    private String patientId;
 
     private String modalityType;
 

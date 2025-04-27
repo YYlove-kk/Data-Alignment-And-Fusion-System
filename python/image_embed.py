@@ -101,23 +101,23 @@ def process_patient_images(patient_folder, model, time_encoder):
     return torch.stack(feature_vectors) if feature_vectors else None
 
 
-def save_patient_embedding(features, output_dir, id):
+def save_patient_embedding(features, output_dir, patient_id):
     os.makedirs(output_dir, exist_ok=True)
-    path = os.path.join(output_dir, id + "_img.npy")
+    path = os.path.join(output_dir, patient_id + "_img.npy")
     np.save(path, features.detach().numpy())  # 使用 detach()
     print(f"✅ Saved features to {path}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Process DICOM images and extract features.")
-    parser.add_argument("--file_path", required=True, help="Path to the raw DICOM folder")
+    parser.add_argument("--patient_folder", required=True, help="Path to the raw DICOM folder")
     parser.add_argument("--output_dir", required=True, help="Path to save the feature embeddings")
     parser.add_argument("--registry_path", required=False, help="Schema registry path (not used here)")
     parser.add_argument("--report_dir", required=False, help="Report output directory (not used here)")
 
     args = parser.parse_args()
 
-    patient_folder = args.file_path
+    patient_folder = args.patient_folder
     output_dir = args.output_dir
     patient_id = os.path.basename(patient_folder.rstrip("/"))
 

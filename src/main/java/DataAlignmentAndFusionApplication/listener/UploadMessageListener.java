@@ -12,7 +12,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Slf4j
 @Component
@@ -31,6 +35,9 @@ public class UploadMessageListener {
     @Value("${mq.cleaning-to-database}")
     private String cleaningToDatabaseQueue;
 
+    @Value("${mq.embedding-task}")
+    private String embeddingTaskQueue;
+
     private final AppConfig appConfig;
 
     public UploadMessageListener(AppConfig appConfig) {
@@ -44,77 +51,55 @@ public class UploadMessageListener {
             String interpreter = appConfig.getInterpreterPath();
 
             String fileName = message.getFileName();
-            String ingestPath = appConfig.getDataIngestPath();
             String scriptPath;
-            if (fileName.endsWith(".dcm")) {
+
+            if (fileName.endsWith(".zip")) {
                 scriptPath = appConfig.getImageEmbedPath(); // 针对 DICOM 图像
+                String outputPath = runPythonScript(interpreter, scriptPath,
+                        "--patient_folder", message.getRawPath(),
+                        "--output_dir", message.getOutputDir()+"image/");
 
-                ProcessBuilder pb = new ProcessBuilder(
-                        interpreter, scriptPath,
-                        "--file_path", message.getRawPath(),
-                        "--output_dir", message.getOutputDir()
-                );
-                pb.redirectErrorStream(true);
-                Process p = pb.start();
-                String outputPath = null;
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
-                    outputPath = reader.readLine();
-                }
-
-                int exitCode = p.waitFor();
-                if (exitCode != 0 || outputPath == null || outputPath.isBlank()) {
-                    log.error("Python嵌入失败: 文件={}, 返回路径={}", message.getRawPath(), outputPath);
+                if (outputPath.equals("image/")) {
+                    log.error("Python嵌入失败: 文件={}", message.getRawPath());
                     return;
                 }
                 // 成功处理，设置嵌入后的路径
-                message.setCleanPath(outputPath.trim());  // trim一下保险
+                message.setCleanPath(message.getRawPath());
+                message.setOutputPath(outputPath.trim());  // trim一下保险
+                uploadRecordService.updatePaths(message.getTaskId(),message.getCleanPath(),message.getOutputPath());
                 rabbitTemplate.convertAndSend(cleaningToDatabaseQueue, message);
             } else {
                 // 先清洗
-                ProcessBuilder cleanPb = new ProcessBuilder(
-                        interpreter, ingestPath,
+                String ingestPath = appConfig.getDataIngestPath();
+                String cleanPath = runPythonScript(interpreter, ingestPath,
                         "--file_path", message.getRawPath(),
-                        "--clean_dir", message.getOutputDir(),
+                        "--clean_dir", message.getCleanDir(),
                         "--registry_path", message.getSchemaRegistryPath(),
-                        "--report_dir", message.getReportDir()
-                );
-                cleanPb.redirectErrorStream(true);
-                Process cleanP = cleanPb.start();
-                String cleanPath = null;
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(cleanP.getInputStream()))) {
-                    cleanPath = reader.readLine();
-                }
-                int exitCode = cleanP.waitFor();
-                if (exitCode != 0 || cleanPath == null || cleanPath.isBlank()) {
-                    log.error("Python清洗失败: 文件={}, 返回路径={}", message.getRawPath(), cleanPath);
+                        "--report_dir", message.getReportDir());
+
+                if (cleanPath == null) {
+                    log.error("Python清洗失败: 文件={}", message.getRawPath());
                     return;
                 }
-                // 成功处理，设置清洗后的路径
+                // 清洗后的路径
                 message.setCleanPath(cleanPath.trim());  // trim一下保险
+                // 数据嵌入
+                scriptPath = appConfig.getTextTimeEmbedPath();
+
+                String outputPath = runPythonScript(interpreter, scriptPath,
+                        "--file_path", message.getCleanPath(),
+                        "--output_dir", message.getOutputDir()+"text/");
+
+                if (outputPath.equals("text/")) {
+                    log.error("Python嵌入失败: 文件={}", message.getRawPath());
+                    return;
+                }
+
+                message.setOutputPath(outputPath.trim());
+                uploadRecordService.updatePaths(message.getTaskId(),message.getCleanPath(),message.getOutputPath());
                 rabbitTemplate.convertAndSend(cleaningToDatabaseQueue, message);
 
-                scriptPath = appConfig.getTextTimeEmbedPath(); // 数据嵌入
-
-                ProcessBuilder embedPb = new ProcessBuilder(
-                        interpreter, scriptPath,
-                        "--file_path", message.getCleanPath(),
-                        "--clean_dir", message.getOutputDir(),
-                        "--registry_path", message.getSchemaRegistryPath(),
-                        "--report_dir", message.getReportDir()
-                );
-                embedPb.redirectErrorStream(true);
-                Process embedP = embedPb.start();
-                String outputPath = null;
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(embedP.getInputStream()))) {
-                    outputPath = reader.readLine();
-                }
-
-                int exitCode2 = embedP.waitFor();
-                if (exitCode2 != 0 || outputPath == null || outputPath.isBlank()) {
-                    log.error("Python嵌入失败: 文件={}, 返回路径={}", message.getRawPath(), outputPath);
-                }
             }
-
 
         } catch (Exception e) {
             log.error("清洗处理异常: 文件={}", message.getRawPath(), e);
@@ -125,7 +110,7 @@ public class UploadMessageListener {
     public void handleTaskStatusMessage(UploadMessage message) {
         try {
             uploadRecordService.updateStatus(message.getTaskId(), "COMPLETED");
-            log.info("清洗记录已入库: {}", message.getFileName());
+            log.info("记录已入库: {}", message.getFileName());
 
         } catch (Exception e) {
             try {
@@ -135,5 +120,24 @@ public class UploadMessageListener {
             }
             log.error("入库处理异常", e);
         }
+    }
+
+    private String runPythonScript(String interpreter, String scriptPath, String... args) throws IOException, InterruptedException {
+        List<String> command = new ArrayList<>();
+        command.add(interpreter);
+        command.add(scriptPath);
+        command.addAll(Arrays.asList(args));
+        ProcessBuilder pb = new ProcessBuilder(command);
+        pb.redirectErrorStream(true);
+        Process process = pb.start();
+        String resultPath;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            resultPath = reader.readLine();
+        }
+        int exitCode = process.waitFor();
+        if (exitCode != 0 || resultPath == null || resultPath.isBlank()) {
+            return null;
+        }
+        return resultPath.trim();
     }
 }

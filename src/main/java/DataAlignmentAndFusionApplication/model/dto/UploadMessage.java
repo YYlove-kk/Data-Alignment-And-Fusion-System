@@ -7,12 +7,14 @@ import java.io.Serializable;
 public class UploadMessage implements Serializable {
 
     private String rawPath;
-    private String cleanPath;
     private String schemaRegistryPath;
     private String reportDir;
     private String cleanDir;
+    private String cleanPath;
     private String outputDir;
+    private String outputPath;
     private String fileName;
+    private String patientId;
     private String taskId;
     private String status;
     private String modalityType;

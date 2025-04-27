@@ -1,52 +1,28 @@
 package DataAlignmentAndFusionApplication.model.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
+
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.util.Date;
 import lombok.Data;
 
 /**
- * 
+ *
  * @TableName alignment_result
  */
-@TableName(value ="alignment_result")
+@TableName("alignment_result")
 @Data
 public class AlignmentResult {
-    /**
-     * 
-     */
-    @TableId(type = IdType.AUTO)
-    private Long id;
 
-    /**
-     * 关联的配置ID
-     */
-    private Long configId;
+    private Long id;  // 主键字段
 
-    /**
-     * 对齐结果JSON
-     */
-    private String resultJson;
+    @TableField("alignment_matrix")
+    private String alignmentMatrix;  // 存储对齐矩阵的 JSON 字符串
 
-    /**
-     * 图表数据JSON
-     */
-    private String chartData;
+    @TableField("semantic_accuracy")
+    private double semanticAccuracy;  // 语义准确率
 
-    /**
-     * 平均相似度
-     */
-    private Double avgSimilarity;
-
-    /**
-     * 任务状态
-     */
-    private String status;
-
-    /**
-     * 
-     */
-    private Date createTime;
-
+    @TableField("alignment_coverage")
+    private int alignmentCoverage;    // 对齐覆盖数
 }

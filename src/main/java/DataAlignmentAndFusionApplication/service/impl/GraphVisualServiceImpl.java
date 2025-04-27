@@ -1,6 +1,5 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
-import DataAlignmentAndFusionApplication.algorithm.data.GraphNode;
 import DataAlignmentAndFusionApplication.service.GraphVisualService;
 import org.springframework.stereotype.Service;
 

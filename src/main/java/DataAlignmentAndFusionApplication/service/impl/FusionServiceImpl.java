@@ -28,15 +28,15 @@ public class FusionServiceImpl implements FusionService {
         return null;
     }
 
-    @Override
-    public void saveFusionResult(FusionResult result) {
-
-    }
-
-    @Override
-    public void batchSaveNodes(List<GraphNode> nodes, String graphId) {
-
-    }
+//    @Override
+//    public void saveFusionResult(FusionResult result) {
+//
+//    }
+//
+//    @Override
+//    public void batchSaveNodes(List<GraphNode> nodes, String graphId) {
+//
+//    }
 
     @Override
     public NodeDetailVO getNodeDetails(String nodeId, Long graphId) {

@@ -16,9 +16,6 @@ public interface UploadRecordService extends IService<UploadRecord> {
     // 文件上传方法，返回上传结果
     Result<String> uploadFileAndProcess(FileUploadDTO dto);
 
-    //轮询状态和outputPath
-    Result<UploadRecord> getTaskStatus(String taskId);
-
     // 获取已上传列表
     Result<PageVO<UploadRecord>> getUploadList(Integer page, Integer size);
 
@@ -28,5 +25,7 @@ public interface UploadRecordService extends IService<UploadRecord> {
     void createWaitingRecord(UploadMessage message);
 
     void updateStatus(String taskId, String status);
+
+    void updatePaths(String taskId, String cleanPath, String outputPath);
 
 }

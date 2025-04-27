@@ -53,13 +53,16 @@ spring:
 mq:
   upload-to-cleaning: upload.cleaning.queue
   cleaning-to-database: cleaning.database.queue
+  embedding-task: embedding-task-queue
 
 #文件路径
 data:
-  upload-raw-dir: data/upload/raw
-  upload-clean-dir: data/upload/clean
-  upload-report-dir: data/upload/report
-  upload-output-dir: data/upload/output
+  upload-raw-dir: data/upload/raw/
+  upload-clean-dir: data/upload/clean/
+  upload-report-dir: data/upload/report/
+  upload-output-dir: data/upload/output/
+
+  align-output-dir: data/align/output/
 
 #schemaRegistry路径
 schema-registry: schema_registry.json
@@ -70,5 +73,6 @@ algorithm:
   data-ingest: python/data_ingest.py
   image-embed: python/image_embed.py
   text-time-embed: python/text_time_embed
+  train-tcmt: python/train_tcmt.py
 
 

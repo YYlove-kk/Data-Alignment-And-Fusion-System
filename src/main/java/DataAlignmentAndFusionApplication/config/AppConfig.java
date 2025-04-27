@@ -34,5 +34,12 @@ public class AppConfig {
     @Value("${schema-registry}")
     private String schemaRegistryPath;
 
+    @Value("${data.align-output-dir}")
+    private String alignOutputPath;
+
+    @Value("${algorithm.train-tcmt}")
+    private String alignScriptPath;
+
+
 
 }

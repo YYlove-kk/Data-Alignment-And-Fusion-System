@@ -1,11 +1,7 @@
-CREATE TABLE `alignment_result`
+CREATE TABLE alignment_result
 (
-    `id`             bigint NOT NULL AUTO_INCREMENT,
-    `config_id`      bigint NOT NULL COMMENT '关联的配置ID',
-    `result_json`    longtext COMMENT '对齐结果JSON',
-    `chart_data`     text COMMENT '图表数据JSON',
-    `avg_similarity` double      DEFAULT NULL COMMENT '平均相似度',
-    `status`         varchar(20) DEFAULT '运行中' COMMENT '任务状态',
-    `create_time`    datetime    DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
+    id                 BIGINT AUTO_INCREMENT PRIMARY KEY, -- 主键
+    alignment_matrix   TEXT,                              -- 存储对齐矩阵（使用 JSON 字符串或类似格式）
+    semantic_accuracy  DOUBLE,                            -- 存储语义准确率
+    alignment_coverage INT                                -- 存储对齐覆盖数
 );

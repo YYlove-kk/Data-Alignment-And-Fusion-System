@@ -2,6 +2,7 @@
 # File: text_time_embed.py
 # Role: 文本 + 时间嵌入生成
 # ---------------------------------------------
+import argparse
 import os
 import numpy as np
 import pandas as pd
@@ -70,17 +71,19 @@ def embed_dataframe(pq_file: str, out_dir: str, id: str):
 
     # 合并文本和时间向量
     final_embeds = np.concatenate([text_embeds, time_embeds], axis=1)  # shape: (N, 800)
-    np.save(os.path.join(out_dir, id + "_txt.npy"), final_embeds)
+    output_file = os.path.join(out_dir, id + "_txt.npy")
+    np.save(output_file, final_embeds)
+    return output_file
 
 
 def main():
-    # parser = argparse.ArgumentParser()
-    # parser.add_argument("--parquet", required=True)
-    # parser.add_argument("--out", required=True)
-    # args = parser.parse_args()
-    # embed_dataframe(args.parquet, args.out)
-    embed_dataframe("output/test.parquet", "output/text", "patient1")
-
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file_path", required=True)
+    parser.add_argument("--output_dir", required=True)
+    args = parser.parse_args()
+    txt_id = os.path.splitext(os.path.basename(args.file_path))[0]
+    output_path = embed_dataframe(args.file_path, args.output_dir, txt_id)
+    print(output_path)
 
 if __name__ == "__main__":
     main()
