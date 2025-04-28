@@ -40,6 +40,9 @@ public class AppConfig {
     @Value("${algorithm.train-tcmt}")
     private String alignScriptPath;
 
+    @Value("${algorithm.neo4j-import}")
+    private String neo4jScriptPath;
+
 
 
 }

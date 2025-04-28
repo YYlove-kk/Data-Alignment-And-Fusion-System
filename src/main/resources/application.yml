@@ -19,10 +19,16 @@ spring:
     url: jdbc:mysql://127.0.0.1:3306/dafs?useUnicode=true&characterEncoding=utf-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
     username: root
     password: 123456
-#    云端数据库
-#    url: jdbc:mysql://122.51.105.149:3306/battery_network?useUnicode=true&characterEncoding=utf-8&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=Asia/Shanghai
-#    username: battery
-#    password: 123456
+
+  data:
+    neo4j:
+      database: my_database                    # 可选，指定使用的数据库，默认是neo4j
+
+  neo4j:
+    authentication:
+      password: 12345678
+      username: neo4j
+    uri: bolt://localhost:7687
 
   # 文件上传配置
   servlet:
@@ -30,25 +36,27 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  #邮箱配置：
-  mail:
-    host: smtp.qq.com
-    port: 587
-    username: 2570089991@qq.com
-    password: erjbxjpbqxgfecid
-    properties:
-      mail:
-        smtp:
-          auth:true
-        starttls:
-          enable:true
-    default-encoding: UTF-8
+#  #邮箱配置：
+#  mail:
+#    host: smtp.qq.com
+#    port: 587
+#    username: 2570089991@qq.com
+#    password: erjbxjpbqxgfecid
+#    properties:
+#      mail:
+#        smtp:
+#          auth:true
+#        starttls:
+#          enable:true
+#    default-encoding: UTF-8
 
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
+
+
 
 mq:
   upload-to-cleaning: upload.cleaning.queue
@@ -70,9 +78,10 @@ schema-registry: schema_registry.json
 #算法路径
 algorithm:
   interpreter-path: python
-  data-ingest: python/data_ingest.py
-  image-embed: python/image_embed.py
-  text-time-embed: python/text_time_embed
-  train-tcmt: python/train_tcmt.py
+  data-ingest: DAFSPython/data_ingest.py
+  image-embed: DAFSPython/image_embed.py
+  text-time-embed: DAFSPython/text_time_embed
+  train-tcmt: DAFSPython/train_tcmt.py
+  neo4j-import: DAFSPython/neo4j_import.py
 
 

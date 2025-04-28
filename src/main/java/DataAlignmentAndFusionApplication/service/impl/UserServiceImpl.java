@@ -6,7 +6,7 @@ import DataAlignmentAndFusionApplication.service.UserService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import DataAlignmentAndFusionApplication.model.entity.User;
-import DataAlignmentAndFusionApplication.mapper.module.UserMapper;
+import DataAlignmentAndFusionApplication.mapper.UserMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 

@@ -1,8 +1,8 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
-import DataAlignmentAndFusionApplication.mapper.module.AlignmentResultMapper;
-import DataAlignmentAndFusionApplication.mapper.module.UploadRecordMapper;
+import DataAlignmentAndFusionApplication.mapper.AlignmentResultMapper;
+import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
 import DataAlignmentAndFusionApplication.model.entity.AlignmentRecord;
 import DataAlignmentAndFusionApplication.model.entity.AlignmentResult;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;

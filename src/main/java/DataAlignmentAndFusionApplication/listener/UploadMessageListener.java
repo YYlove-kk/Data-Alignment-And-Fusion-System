@@ -1,7 +1,7 @@
 package DataAlignmentAndFusionApplication.listener;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
-import DataAlignmentAndFusionApplication.mapper.module.UploadRecordMapper;
+import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
 import DataAlignmentAndFusionApplication.model.dto.UploadMessage;
 import DataAlignmentAndFusionApplication.service.UploadRecordService;
 import lombok.extern.slf4j.Slf4j;
