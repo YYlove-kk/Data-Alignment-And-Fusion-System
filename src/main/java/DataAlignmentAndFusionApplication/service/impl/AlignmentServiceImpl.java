@@ -2,30 +2,37 @@ package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
 import DataAlignmentAndFusionApplication.mapper.module.AlignmentResultMapper;
+import DataAlignmentAndFusionApplication.mapper.module.UploadRecordMapper;
+import DataAlignmentAndFusionApplication.model.entity.AlignmentRecord;
 import DataAlignmentAndFusionApplication.model.entity.AlignmentResult;
+import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.service.AlignmentService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import com.fasterxml.jackson.core.type.TypeReference;
+
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.List;
+import java.util.*;
 
 @Slf4j
 @Service
-public class AlignmentServiceImpl implements AlignmentService {
+public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, AlignmentResult> implements AlignmentService {
 
     @Autowired
     private AppConfig appConfig;
 
-
     @Autowired
-    private AlignmentResultMapper alignmentResultMapper;
+    private UploadRecordMapper uploadRecordMapper;
 
     @Override
     public AlignmentResult alignTextAndImage() throws Exception {
@@ -39,7 +46,6 @@ public class AlignmentServiceImpl implements AlignmentService {
 
         // 调用 Python 脚本并获取结果
         String result = runPythonScript(appConfig.getAlignScriptPath(), arguments);
-
 
         // 解析 Python 返回的 JSON 数据
         JSONObject json = new JSONObject(result);
@@ -58,9 +64,48 @@ public class AlignmentServiceImpl implements AlignmentService {
         alignmentResult.setAlignmentCoverage(alignmentCoverage);
 
         // 保存到数据库
-        alignmentResultMapper.insert(alignmentResult);
+        save(alignmentResult);
 
         return alignmentResult;
+    }
+
+    @Override
+    public List<AlignmentRecord> getAllResults() {
+        File[] files = new File(appConfig.getAlignOutputPath()).listFiles();
+
+        // 1. 提取 patientId
+        Set<String> patientIds = new HashSet<>();
+        for (File file : files) {
+            String fileName = file.getName();
+            if (fileName.contains("_z_t_epoch")) {
+                String patientId = fileName.split("_z_t_epoch")[0];
+                patientIds.add(patientId);
+            }
+        }
+
+        // 2. 读取 semanticAccuracyMap
+        Map<String, Double> semanticAccuracyMap = loadSemanticSimilarity(appConfig.getAlignOutputPath());
+
+        // 3. 查询并组装
+        List<AlignmentRecord> resultList = new ArrayList<>();
+
+        for (String patientId : patientIds) {
+            UploadRecord uploadRecord = uploadRecordMapper.selectOne(
+                    new QueryWrapper<UploadRecord>()
+                            .eq("patient_id", patientId)
+                            .eq("status", "COMPLETED")
+            );
+            if (uploadRecord != null) {
+                AlignmentRecord record = new AlignmentRecord();
+                record.setPatientId(patientId);
+                record.setFileName(uploadRecord.getFileName());
+                record.setSemanticSimilarity(semanticAccuracyMap.getOrDefault(patientId, null));  // 防止没有的情况
+
+                resultList.add(record);
+            }
+        }
+
+        return resultList;
     }
 
     private String runPythonScript(String scriptPath, List<String> arguments) throws IOException, InterruptedException {
@@ -91,18 +136,18 @@ public class AlignmentServiceImpl implements AlignmentService {
         return output.toString();
     }
 
-    public double[][] convertJsonArrayToDoubleArray(JSONArray jsonArray) {
-        int rows = jsonArray.length();
-        int cols = jsonArray.getJSONArray(0).length();
-        double[][] matrix = new double[rows][cols];
-
-        for (int i = 0; i < rows; i++) {
-            JSONArray row = jsonArray.getJSONArray(i);
-            for (int j = 0; j < cols; j++) {
-                matrix[i][j] = row.getDouble(j);
-            }
+    private Map<String, Double> loadSemanticSimilarity(String outputDir) {
+        File file = new File(appConfig.getAlignOutputPath(), "diagonal_similarity.json");
+        if (!file.exists()) {
+            return Collections.emptyMap();
         }
-        return matrix;
+
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(file, new TypeReference<Map<String, Double>>() {});
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load semantic similarity", e);
+        }
     }
 }
 

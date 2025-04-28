@@ -32,13 +32,13 @@ class PairDataset(Dataset):
         return torch.tensor(txt, dtype=torch.float32), \
             torch.tensor(img, dtype=torch.float32)
 
+
 # 定义保存 embeddings 的函数
 def save_embeddings_per_patient(epoch, z_t, z_i, output_dir, patient_ids):
     for idx, patient_id in enumerate(patient_ids):
         # 按患者 ID 保存 embeddings
         np.save(f"{output_dir}/{patient_id}_z_t_epoch{epoch}.npy", z_t[idx].cpu().detach().numpy())
         np.save(f"{output_dir}/{patient_id}_z_i_epoch{epoch}.npy", z_i[idx].cpu().detach().numpy())
-
 
 
 def calculate_semantic_accuracy(similarity_matrix, threshold=0.7):
@@ -51,6 +51,7 @@ def calculate_semantic_accuracy(similarity_matrix, threshold=0.7):
     accuracy = correct_alignments / total_pairs  # 准确率 = 正确对数 / 总对数
     return accuracy
 
+
 def calculate_alignment_coverage(similarity_matrix, threshold=0.7):
     """
     计算对齐覆盖数：相似度大于阈值的对的数量。
@@ -58,9 +59,9 @@ def calculate_alignment_coverage(similarity_matrix, threshold=0.7):
     covered_pairs = (similarity_matrix > threshold).sum()  # 统计符合条件的对的数量
     return covered_pairs
 
-def save_alignment_matrix(zt, zi):
+def save_alignment_matrix(zt, zi, patient_ids, output_dir):
     """
-    计算并返回对齐矩阵 (cosine similarity) 为 JSON 格式
+    计算对齐矩阵，保存alignment_matrix.json和diagonal_similarity.json
     """
     similarity_matrix = cosine_similarity(zt.cpu().detach().numpy(), zi.cpu().detach().numpy())
 
@@ -68,15 +69,25 @@ def save_alignment_matrix(zt, zi):
     accuracy = calculate_semantic_accuracy(similarity_matrix)
     coverage = calculate_alignment_coverage(similarity_matrix)
 
-    # 构建结果字典
+    # 提取自己对应自己的相似度（取对角线）
+    diagonal = np.diag(similarity_matrix)
+
+    # 保存 diagonal_similarity.json
+    similarity_dict = {patient_id: float(sim) for patient_id, sim in zip(patient_ids, diagonal)}
+    with open(os.path.join(output_dir, "diagonal_similarity.json"), "w") as f:
+        json.dump(similarity_dict, f, indent=2)
+
+    # 准备 alignment_result 内容
     alignment_result = {
-        "alignment_matrix": similarity_matrix.tolist(),  # 转换为 list 格式
-        "semantic_accuracy": accuracy,  # 语义准确率
-        "alignment_coverage": coverage  # 对齐覆盖数
+        "alignment_matrix": similarity_matrix.tolist(),
+        "semantic_accuracy": accuracy,
+        "alignment_coverage": coverage,
+        "diagonal_similarity": diagonal.tolist(),
+        "patient_ids": patient_ids
     }
 
-    # 直接返回对齐矩阵的 JSON 格式
     return alignment_result
+
 
 # 定义主函数
 def main():
@@ -119,14 +130,15 @@ def main():
         # 保存每个 epoch 的 embeddings
         save_embeddings_per_patient(epoch, all_z_t, all_z_i, args.output_dir, ds.ids)
 
-        # 获取对齐矩阵的 JSON 格式
-        alignment_result = save_alignment_matrix(all_z_t, all_z_i)
+        # 计算并保存对齐矩阵，同时保存 diagonal_similarity.json
+        alignment_result = save_alignment_matrix(all_z_t, all_z_i, ds.ids, args.output_dir)
 
         # 输出对齐矩阵为 JSON 格式
         print(json.dumps(alignment_result))
 
         # 保存模型
         torch.save(net.state_dict(), f"{args.output_dir}/tcmt_ep{epoch}.pt")
+
 
 if __name__ == "__main__":
     main()
