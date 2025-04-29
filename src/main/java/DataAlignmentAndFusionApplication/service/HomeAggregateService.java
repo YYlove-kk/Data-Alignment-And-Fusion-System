@@ -7,5 +7,4 @@ import jakarta.validation.Valid;
 public interface HomeAggregateService {
     HomeOverviewVO getHomeOverview();
 
-//    GlobalSearchResultVO globalSearch(@Valid GlobalSearchDTO dto);
 }

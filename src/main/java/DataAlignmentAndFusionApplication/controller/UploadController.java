@@ -4,18 +4,26 @@ import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.service.UploadRecordService;
 import DataAlignmentAndFusionApplication.util.Result;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/upload")
-public class DataController {
+public class UploadController {
+    @Autowired
     private UploadRecordService uploadRecordService;
 
     // 上传文件
     @PostMapping("/data")
-    public Result<String> uploadFile(@RequestBody FileUploadDTO dto) {
+    public Result<String> uploadFile(@ModelAttribute  FileUploadDTO dto) {
         // 调用上传服务
-        return uploadRecordService.uploadFileAndProcess(dto);
+        return uploadRecordService.uploadFile(dto);
+    }
+
+    @PostMapping("/embed")
+    public Result<String> embedFile() {
+        // 嵌入服务
+        return uploadRecordService.embedFile();
     }
 
     // 获取已上传列表

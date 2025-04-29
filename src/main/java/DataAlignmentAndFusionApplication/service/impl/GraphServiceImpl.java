@@ -1,10 +1,14 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
+import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
+import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.GraphVO;
 import DataAlignmentAndFusionApplication.service.GraphService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.neo4j.driver.*;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -20,7 +24,12 @@ public class GraphServiceImpl implements GraphService {
     private static final String NEO4J_USERNAME = "neo4j";
     private static final String NEO4J_PASSWORD = "12345678";
 
+    @Autowired
     private AppConfig appConfig;
+
+    @Autowired
+    private UploadRecordMapper uploadRecordMapper;
+
 
     @Override
     public GraphVO buildKnowledgeGraph() {
@@ -90,12 +99,35 @@ public class GraphServiceImpl implements GraphService {
      */
     private List<GraphVO.Node> queryNodes(Session session) {
         List<GraphVO.Node> nodes = new ArrayList<>();
-        session.run("MATCH (n) RETURN id(n) AS id, labels(n)[0] AS label, n.id AS nodeId")
+        session.run("MATCH (n) RETURN id(n) AS id, labels(n)[0] AS type, n.id AS label")
                 .forEachRemaining(record -> {
                     GraphVO.Node node = new GraphVO.Node();
                     node.setId(String.valueOf(record.get("id").asInt()));
-                    node.setLabel(record.get("nodeId").isNull() ? "unknown" : record.get("nodeId").asString());
-                    node.setType(record.get("label").asString());
+                    node.setLabel(record.get("label").isNull() ? "unknown" : record.get("label").asString());
+                    node.setType(record.get("type").asString());
+                    node.setNodeDetail(new ArrayList<>());
+
+                    if ("Patient".equals(node.getType())) {
+                        String patientId = node.getLabel();
+                        QueryWrapper<UploadRecord> queryWrapper = new QueryWrapper<>();
+                        queryWrapper.eq("patient_id", patientId);
+
+                        List<UploadRecord> uploadRecords = uploadRecordMapper.selectList(queryWrapper);
+                        if (!uploadRecords.isEmpty()) {
+                            List<GraphVO.Node.NodeDetail> nodeDetails = new ArrayList<>();
+                            for (UploadRecord uploadRecord : uploadRecords) {
+                                GraphVO.Node.NodeDetail nodeDetail = new GraphVO.Node.NodeDetail();
+                                nodeDetail.setFileName(uploadRecord.getFileName());
+                                nodeDetail.setModalityType(uploadRecord.getModalityType());
+                                nodeDetail.setInstitution(uploadRecord.getInstitution());
+                                nodeDetail.setProcessTime(uploadRecord.getProcessTime());
+                                nodeDetails.add(nodeDetail);
+                            }
+                            node.setNodeDetail(nodeDetails);
+                        }
+                    }
+
+
                     nodes.add(node);
                 });
         return nodes;
@@ -109,12 +141,15 @@ public class GraphServiceImpl implements GraphService {
      */
     private List<GraphVO.Edge> queryEdges(Session session) {
         List<GraphVO.Edge> edges = new ArrayList<>();
-        session.run("MATCH (n)-[r]->(m) RETURN id(n) AS source, id(m) AS target, type(r) AS relation")
+        session.run("MATCH (n)-[r]->(m) RETURN id(n) AS source, id(m) AS target, type(r) AS relation, r.weight AS weight")
                 .forEachRemaining(record -> {
                     GraphVO.Edge edge = new GraphVO.Edge();
                     edge.setSource(String.valueOf(record.get("source").asInt()));
                     edge.setTarget(String.valueOf(record.get("target").asInt()));
                     edge.setRelation(record.get("relation").asString());
+                    Value weightValue = record.get("weight");
+                    edge.setWeight(weightValue.isNull() ? 1.0 : weightValue.asDouble());
+
                     edges.add(edge);
                 });
         return edges;

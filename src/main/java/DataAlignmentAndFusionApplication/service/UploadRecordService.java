@@ -14,7 +14,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface UploadRecordService extends IService<UploadRecord> {
     // 文件上传方法，返回上传结果
-    Result<String> uploadFileAndProcess(FileUploadDTO dto);
+    Result<String> uploadFile(FileUploadDTO dto);
+
+    Result<String> embedFile();
 
     // 获取已上传列表
     Result<PageVO<UploadRecord>> getUploadList(Integer page, Integer size);

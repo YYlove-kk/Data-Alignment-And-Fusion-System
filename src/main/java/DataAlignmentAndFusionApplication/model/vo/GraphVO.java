@@ -2,10 +2,7 @@ package DataAlignmentAndFusionApplication.model.vo;
 
 import lombok.Data;
 
-import java.time.LocalDateTime;
-
-import lombok.Data;
-
+import java.util.Date;
 import java.util.List;
 
 @Data
@@ -18,6 +15,16 @@ public class GraphVO {
         private String id;
         private String label;
         private String type;
+        private List<NodeDetail> nodeDetail;
+
+        @Data
+        public static class NodeDetail{
+            private String fileName;
+            private String modalityType;
+            private String institution;
+            private Date processTime;
+        }
+
     }
 
     @Data
@@ -25,5 +32,9 @@ public class GraphVO {
         private String source;
         private String target;
         private String relation;
+        private double weight;
     }
 }
+
+
+

@@ -36,19 +36,6 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-#  #邮箱配置：
-#  mail:
-#    host: smtp.qq.com
-#    port: 587
-#    username: 2570089991@qq.com
-#    password: erjbxjpbqxgfecid
-#    properties:
-#      mail:
-#        smtp:
-#          auth:true
-#        starttls:
-#          enable:true
-#    default-encoding: UTF-8
 
   rabbitmq:
     host: localhost
@@ -83,5 +70,7 @@ algorithm:
   text-time-embed: DAFSPython/text_time_embed
   train-tcmt: DAFSPython/train_tcmt.py
   neo4j-import: DAFSPython/neo4j_import.py
+  kpca_reduce: DAFSPython/kpca_reduce.py
+
 
 

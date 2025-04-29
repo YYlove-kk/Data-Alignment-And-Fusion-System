@@ -43,6 +43,6 @@ public class AppConfig {
     @Value("${algorithm.neo4j-import}")
     private String neo4jScriptPath;
 
-
-
+    @Value("${algorithm.kpca_reduce}")
+    private String kpcaReducePath;
 }

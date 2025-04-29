@@ -15,13 +15,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/alignment")
 public class AlignmentController {
-
-    private final AlignmentService alignmentService;
-
     @Autowired
-    public AlignmentController(AlignmentService alignmentService) {
-        this.alignmentService = alignmentService;
-    }
+    private  AlignmentService alignmentService;
 
     @PostMapping("/align")
     public AlignmentResult align() {

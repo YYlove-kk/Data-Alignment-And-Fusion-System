@@ -6,6 +6,7 @@ import DataAlignmentAndFusionApplication.model.dto.UploadMessage;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.util.Result;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -26,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -68,82 +70,100 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
     }
 
     @Override
-    public Result<String> uploadFileAndProcess(FileUploadDTO dto) {
+    public Result<String> uploadFile(FileUploadDTO dto) {
         try {
-            // 生成 taskId
             String taskId = UUID.randomUUID().toString();
             String patientId = dto.getPatientId();
-            // 1. 保存原文件
             MultipartFile file = dto.getFile();
             String fileName = file.getOriginalFilename();
             String suffix = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
 
-            // 2. 确定子目录
             Path patientDir = rawDir.resolve(patientId);
             Path targetDir;
 
-            // 检查文件类型并确定保存的子目录
             if (suffix.equals("xlsx") || suffix.equals("xls") || suffix.equals("csv")) {
                 targetDir = patientDir.resolve("text");
             } else if (suffix.equals("zip")) {
-                targetDir = patientDir.resolve("image"); // ZIP默认认为是影像类，统一放 image
+                targetDir = patientDir.resolve("image");
             } else {
                 return Result.error(500, "文件类型不支持");
             }
 
-            // 3. 确保目录存在
             Files.createDirectories(targetDir);
 
-            // 4. 保存文件
             String rawPath;
             if (suffix.equals("zip")) {
-                // 保存zip文件
                 Path zipPath = targetDir.resolve(fileName);
                 Files.copy(file.getInputStream(), zipPath, StandardCopyOption.REPLACE_EXISTING);
-
-                // 解压
                 unzip(zipPath.toFile(), targetDir.toFile());
-
-                // 删除临时zip
                 Files.deleteIfExists(zipPath);
-
-                // 设置rawPath为解压后的目录
                 rawPath = targetDir.toString();
             } else {
-                // 普通文件保存
                 Path targetPath = targetDir.resolve(fileName);
-                rawPath = String.valueOf(Files.copy(
-                        file.getInputStream(),
-                        targetPath,
-                        StandardCopyOption.REPLACE_EXISTING
-                ));
+                Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
+                rawPath = targetPath.toString();
             }
-            // 2. 调用 Python 清洗
-            UploadMessage message = new UploadMessage();
-            message.setRawPath(rawPath);
-            message.setSchemaRegistryPath(schemaRegistry.toString());
-            message.setReportDir(reportDir.toString());
-            message.setCleanDir(cleanDir.toString());
-            message.setOutputDir(outputDir.toString());
-            message.setFileName(fileName);
-            message.setInstitution(dto.getInstitution());
-            message.setModalityType(dto.getModalityType());
-            message.setTaskId(taskId);
-            message.setPatientId(patientId);
-            message.setStatus("WAITING");
 
-            // 1. 创建新的任务记录，初始状态是 WAITING
+            UploadMessage message = UploadMessage.builder()
+                    .rawPath(rawPath)
+                    .schemaRegistryPath(schemaRegistry.toString())
+                    .reportDir(reportDir.toString())
+                    .cleanDir(cleanDir.toString())
+                    .outputDir(outputDir.toString())
+                    .fileName(fileName)
+                    .institution(dto.getInstitution())
+                    .modalityType(dto.getModalityType())
+                    .taskId(taskId)
+                    .patientId(patientId)
+                    .status("WAITING")
+                    .build();
+
+            // 创建任务记录，但不发送
             createWaitingRecord(message);
-            // 2. 立即将状态更新为 PROCESSING
-            updateStatus(message.getTaskId(), "PROCESSING");
-            rabbitTemplate.convertAndSend(uploadToCleaningQueue, message);
-            //任务创建成功
-            return Result.success(taskId);
+
+            return Result.success(taskId); // 前端拿到 taskId
 
         } catch (IOException e) {
             e.printStackTrace();
             return Result.error(500, "上传失败：" + e.getMessage());
         }
+    }
+
+    @Override
+    public Result<String> embedFile() {
+        // 1. 查询所有状态为 WAITING 的记录
+        List<UploadRecord> waitingRecords = uploadRecordMapper.selectList(
+                new LambdaQueryWrapper<UploadRecord>()
+                        .eq(UploadRecord::getStatus, "WAITING")
+        );
+
+        if (waitingRecords.isEmpty()) {
+            return Result.success("没有需要处理的任务");
+        }
+
+        for (UploadRecord record : waitingRecords) {
+            UploadMessage message = UploadMessage.builder()
+                    .taskId(record.getTaskId())
+                    .rawPath(record.getRawPath())
+                    .schemaRegistryPath(schemaRegistry.toString())
+                    .reportDir(reportDir.toString())
+                    .cleanDir(cleanDir.toString())
+                    .outputDir(outputDir.toString())
+                    .fileName(record.getFileName())
+                    .institution(record.getInstitution())
+                    .modalityType(record.getModalityType())
+                    .patientId(record.getPatientId())
+                    .status("PROCESSING")
+                    .build();
+
+            // 2. 更新状态
+            updateStatus(record.getTaskId(), "PROCESSING");
+
+            // 3. 发送消息
+            rabbitTemplate.convertAndSend(uploadToCleaningQueue, message);
+        }
+
+        return Result.success("成功处理任务数量：" + waitingRecords.size());
     }
 
 
