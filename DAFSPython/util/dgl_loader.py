@@ -4,7 +4,7 @@ import torch
 from neo4j import GraphDatabase
 from collections import defaultdict
 
-def load_neo4j(uri, user="neo4j", password="pwd"):
+def load_neo4j(uri, user="neo4j", password="12345678"):
     driver = GraphDatabase.driver(uri, auth=(user, password))
     node_info = []  # (node_id, node_type, props)
     edge_info = []  # (source_id, target_id, rel_type)

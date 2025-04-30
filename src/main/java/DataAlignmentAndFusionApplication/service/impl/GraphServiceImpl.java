@@ -2,11 +2,10 @@ package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
 import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
-import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
+import DataAlignmentAndFusionApplication.model.dto.GraphReq;
 import DataAlignmentAndFusionApplication.model.vo.GraphVO;
 import DataAlignmentAndFusionApplication.service.GraphService;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import org.neo4j.driver.*;
+import DataAlignmentAndFusionApplication.util.GraphQueryUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,59 +13,50 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class GraphServiceImpl implements GraphService {
 
-    private static final String NEO4J_URI = "bolt://localhost:7687";
-    private static final String NEO4J_USERNAME = "neo4j";
-    private static final String NEO4J_PASSWORD = "12345678";
-
     @Autowired
     private AppConfig appConfig;
 
-    @Autowired
-    private UploadRecordMapper uploadRecordMapper;
+    private static final AtomicInteger tagCounter = new AtomicInteger(1);
 
+    @Autowired
+    private GraphQueryUtil graphQueryUtil;
 
     @Override
-    public GraphVO buildKnowledgeGraph() {
+    public GraphVO buildKnowledgeGraph(GraphReq req) {
+
+        String patientId = req.getPatientId();
+        int mode = req.getMode().getCode();
+        // 生成唯一的 tag 值
+        int tag = generateTag();
+
         // 1. 调用 Python 脚本，导入数据
-        runScript(appConfig.getInterpreterPath(), appConfig.getNeo4jScriptPath(), appConfig.getAlignOutputPath());
+        runScript(appConfig.getInterpreterPath(), appConfig.getNeo4jScriptPath(), patientId, tag, mode);
+
+        // 调用 hnsw_builder.py
+        runScript(appConfig.getInterpreterPath(), appConfig.getKnswScriptPath(), patientId, tag, mode);
 
         // 2. 从 Neo4j 查询知识图谱
-        GraphVO graphVO = new GraphVO();
-        List<GraphVO.Node> nodes;
-        List<GraphVO.Edge> edges;
-
-        // 通过 Driver 创建 Session，查询数据
-        try (Driver driver = GraphDatabase.driver(NEO4J_URI, AuthTokens.basic(NEO4J_USERNAME, NEO4J_PASSWORD));
-             Session session = driver.session()) {
-
-            // 查询节点
-            nodes = queryNodes(session);
-
-            // 查询关系
-            edges = queryEdges(session);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("查询Neo4j知识图谱失败", e);
-        }
-
-        graphVO.setNodes(nodes);
-        graphVO.setEdges(edges);
-        return graphVO;
+        return graphQueryUtil.queryGraphByTag(tag);
     }
 
-    private void runScript(String executable, String scriptPath, String embedDirectoryPath) {
+    private int generateTag() {
+        // 原子自增
+        return tagCounter.getAndIncrement();
+    }
+
+    private void runScript(String executable, String scriptPath, String patientId, int tag, int mode) {
         // 组装参数
-        String[] command = new String[] {
-                executable,        // python 或 python3 执行命令
-                scriptPath,              // python 脚本路径
-                embedDirectoryPath      // 传入的目录路径
+        String[] command = new String[]{
+                executable,
+                scriptPath,
+                patientId,
+                String.valueOf(tag),
+                String.valueOf(mode)
         };
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -91,67 +81,4 @@ public class GraphServiceImpl implements GraphService {
         }
     }
 
-    /**
-     * 查询 Neo4j 节点数据
-     *
-     * @param session Neo4j Session
-     * @return 节点列表
-     */
-    private List<GraphVO.Node> queryNodes(Session session) {
-        List<GraphVO.Node> nodes = new ArrayList<>();
-        session.run("MATCH (n) RETURN id(n) AS id, labels(n)[0] AS type, n.id AS label")
-                .forEachRemaining(record -> {
-                    GraphVO.Node node = new GraphVO.Node();
-                    node.setId(String.valueOf(record.get("id").asInt()));
-                    node.setLabel(record.get("label").isNull() ? "unknown" : record.get("label").asString());
-                    node.setType(record.get("type").asString());
-                    node.setNodeDetail(new ArrayList<>());
-
-                    if ("Patient".equals(node.getType())) {
-                        String patientId = node.getLabel();
-                        QueryWrapper<UploadRecord> queryWrapper = new QueryWrapper<>();
-                        queryWrapper.eq("patient_id", patientId);
-
-                        List<UploadRecord> uploadRecords = uploadRecordMapper.selectList(queryWrapper);
-                        if (!uploadRecords.isEmpty()) {
-                            List<GraphVO.Node.NodeDetail> nodeDetails = new ArrayList<>();
-                            for (UploadRecord uploadRecord : uploadRecords) {
-                                GraphVO.Node.NodeDetail nodeDetail = new GraphVO.Node.NodeDetail();
-                                nodeDetail.setFileName(uploadRecord.getFileName());
-                                nodeDetail.setModalityType(uploadRecord.getModalityType());
-                                nodeDetail.setInstitution(uploadRecord.getInstitution());
-                                nodeDetail.setProcessTime(uploadRecord.getProcessTime());
-                                nodeDetails.add(nodeDetail);
-                            }
-                            node.setNodeDetail(nodeDetails);
-                        }
-                    }
-
-
-                    nodes.add(node);
-                });
-        return nodes;
-    }
-
-    /**
-     * 查询 Neo4j 关系数据
-     *
-     * @param session Neo4j Session
-     * @return 关系列表
-     */
-    private List<GraphVO.Edge> queryEdges(Session session) {
-        List<GraphVO.Edge> edges = new ArrayList<>();
-        session.run("MATCH (n)-[r]->(m) RETURN id(n) AS source, id(m) AS target, type(r) AS relation, r.weight AS weight")
-                .forEachRemaining(record -> {
-                    GraphVO.Edge edge = new GraphVO.Edge();
-                    edge.setSource(String.valueOf(record.get("source").asInt()));
-                    edge.setTarget(String.valueOf(record.get("target").asInt()));
-                    edge.setRelation(record.get("relation").asString());
-                    Value weightValue = record.get("weight");
-                    edge.setWeight(weightValue.isNull() ? 1.0 : weightValue.asDouble());
-
-                    edges.add(edge);
-                });
-        return edges;
-    }
 }

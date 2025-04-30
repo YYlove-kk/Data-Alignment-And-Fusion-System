@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DataAlignmentAndFusionApplication.mapper.FusionRecordMapper">
+
+    <resultMap id="BaseResultMap" type="DataAlignmentAndFusionApplication.model.entity.FusionRecord">
+            <id property="id" column="id" />
+            <result property="patientId" column="patient_id" />
+            <result property="graphTag" column="graph_tag" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,npy_file_name,graph_tag
+    </sql>
+</mapper>

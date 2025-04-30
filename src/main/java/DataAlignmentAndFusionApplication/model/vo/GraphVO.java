@@ -13,7 +13,7 @@ public class GraphVO {
     @Data
     public static class Node {
         private String id;
-        private String label;
+        private String name;
         private String type;
         private List<NodeDetail> nodeDetail;
 
@@ -31,8 +31,13 @@ public class GraphVO {
     public static class Edge {
         private String source;
         private String target;
-        private String relation;
-        private double weight;
+        private List<RelationDetail> relations;
+
+        @Data
+        public static class RelationDetail {
+            private String relation;  // 例如 RELATED_TO_IMAGE, CROSS_MODAL_SIMILAR
+            private Double weight;    // 可以为空，例如 RELATED_TO_IMAGE 没有权重
+        }
     }
 }
 

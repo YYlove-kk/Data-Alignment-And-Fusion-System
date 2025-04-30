@@ -43,6 +43,12 @@ public class AppConfig {
     @Value("${algorithm.neo4j-import}")
     private String neo4jScriptPath;
 
+    @Value("${algorithm.knsw_builder}")
+    private String knswScriptPath;
+
+    @Value("${algorithm.fusion}")
+    private String fusionScriptPath;
+
     @Value("${algorithm.kpca_reduce}")
     private String kpcaReducePath;
 }

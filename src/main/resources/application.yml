@@ -68,9 +68,11 @@ algorithm:
   data-ingest: DAFSPython/data_ingest.py
   image-embed: DAFSPython/image_embed.py
   text-time-embed: DAFSPython/text_time_embed
-  train-tcmt: DAFSPython/train_tcmt.py
-  neo4j-import: DAFSPython/neo4j_import.py
+  train-tcmt: DAFSPython/train/train_tcmt.py
+  neo4j-import: DAFSPython/util/neo4j_import.py
   kpca_reduce: DAFSPython/kpca_reduce.py
+  knsw_builder: DAFSPython/util/hnsw_builder.py
+  fusion: DAFSPython/fusion.py
 
 
 

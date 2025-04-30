@@ -5,9 +5,10 @@ import numpy as np
 import glob
 import random
 import os
+
+from torch.nn.functional import cosine_similarity
 from torch.utils.data import Dataset, DataLoader
 from model.model_tcmt import TCMT, clip_loss
-from sklearn.metrics.pairwise import cosine_similarity
 import json
 
 
@@ -37,8 +38,8 @@ class PairDataset(Dataset):
 def save_embeddings_per_patient(epoch, z_t, z_i, output_dir, patient_ids):
     for idx, patient_id in enumerate(patient_ids):
         # 按患者 ID 保存 embeddings
-        np.save(f"{output_dir}/{patient_id}_z_t_epoch{epoch}.npy", z_t[idx].cpu().detach().numpy())
-        np.save(f"{output_dir}/{patient_id}_z_i_epoch{epoch}.npy", z_i[idx].cpu().detach().numpy())
+        np.save(f"{output_dir}/{patient_id}/text/{patient_id}_z_t_epoch{epoch}.npy", z_t[idx].cpu().detach().numpy())
+        np.save(f"{output_dir}/{patient_id}/image/{patient_id}_z_i_epoch{epoch}.npy", z_i[idx].cpu().detach().numpy())
 
 
 def calculate_semantic_accuracy(similarity_matrix, threshold=0.7):
