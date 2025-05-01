@@ -5,13 +5,15 @@
 <mapper namespace="DataAlignmentAndFusionApplication.mapper.AlignmentResultMapper">
 
     <resultMap id="BaseResultMap" type="DataAlignmentAndFusionApplication.model.entity.AlignmentResult">
-            <id property="taskId" column="task_id" />
-            <result property="textAlignmentPath" column="text_alignment_path" />
-            <result property="imageAlignmentPath" column="image_alignment_path" />
-            <result property="status" column="status" />
+        <id property="id" column="id"/>
+        <result property="alignmentMatrix" column="alignment_matrix"/>
+        <result property="semanticAccuracy" column="semantic_accuracy"/>
+        <result property="alignmentCoverage" column="alignment_coverage"/>
+        <result property="diagonalSimilarity" column="diagonal_similarity"/>
+        <result property="sourceIds" column="source_ids"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        task_id,text_alignment_path,image_alignment_path,status
+        id,alignment_matrix,semantic_accuracy,alignment_coverage,diagonal_similarity, source_ids
     </sql>
 </mapper>

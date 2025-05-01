@@ -1,6 +1,7 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
+import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
 import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
 import DataAlignmentAndFusionApplication.model.dto.UploadMessage;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
@@ -11,7 +12,6 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import DataAlignmentAndFusionApplication.service.UploadRecordService;
-import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,18 +73,18 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
     public Result<String> uploadFile(FileUploadDTO dto) {
         try {
             String taskId = UUID.randomUUID().toString();
-            String patientId = dto.getPatientId();
+            String sourceId = dto.getSourceId();
             MultipartFile file = dto.getFile();
             String fileName = file.getOriginalFilename();
             String suffix = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
 
-            Path patientDir = rawDir.resolve(patientId);
+            Path sourceDir = rawDir.resolve(sourceId);
             Path targetDir;
 
             if (suffix.equals("xlsx") || suffix.equals("xls") || suffix.equals("csv")) {
-                targetDir = patientDir.resolve("text");
+                targetDir = sourceDir.resolve("text");
             } else if (suffix.equals("zip")) {
-                targetDir = patientDir.resolve("image");
+                targetDir = sourceDir.resolve("image");
             } else {
                 return Result.error(500, "文件类型不支持");
             }
@@ -114,7 +114,7 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
                     .institution(dto.getInstitution())
                     .modalityType(dto.getModalityType())
                     .taskId(taskId)
-                    .patientId(patientId)
+                    .sourceId(sourceId)
                     .status("WAITING")
                     .build();
 
@@ -152,7 +152,7 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
                     .fileName(record.getFileName())
                     .institution(record.getInstitution())
                     .modalityType(record.getModalityType())
-                    .patientId(record.getPatientId())
+                    .sourceId(record.getSourceId())
                     .status("PROCESSING")
                     .build();
 
@@ -210,7 +210,7 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
     public void createWaitingRecord(UploadMessage message) {
         UploadRecord record = new UploadRecord();
         record.setTaskId(message.getTaskId());
-        record.setPatientId(message.getPatientId());
+        record.setSourceId(message.getSourceId());
         record.setRawPath(message.getRawPath());
         record.setSchemaRegistryPath(message.getSchemaRegistryPath());
         record.setReportDir(message.getReportDir());

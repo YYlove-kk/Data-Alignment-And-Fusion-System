@@ -34,12 +34,13 @@ class PairDataset(Dataset):
             torch.tensor(img, dtype=torch.float32)
 
 
-# 定义保存 embeddings 的函数
-def save_embeddings_per_patient(epoch, z_t, z_i, output_dir, patient_ids):
+# 保存 embeddings
+def save_embeddings_per_patient(z_t, z_i, output_dir, patient_ids):
     for idx, patient_id in enumerate(patient_ids):
-        # 按患者 ID 保存 embeddings
-        np.save(f"{output_dir}/{patient_id}/text/{patient_id}_z_t_epoch{epoch}.npy", z_t[idx].cpu().detach().numpy())
-        np.save(f"{output_dir}/{patient_id}/image/{patient_id}_z_i_epoch{epoch}.npy", z_i[idx].cpu().detach().numpy())
+        # 只保存最后一个 epoch 的嵌入向量
+            np.save(f"{output_dir}/{patient_id}/{patient_id}_z_t.npy", z_t[idx].cpu().detach().numpy())
+            np.save(f"{output_dir}/{patient_id}/{patient_id}_z_i.npy", z_i[idx].cpu().detach().numpy())
+
 
 
 def calculate_semantic_accuracy(similarity_matrix, threshold=0.7):
@@ -60,9 +61,9 @@ def calculate_alignment_coverage(similarity_matrix, threshold=0.7):
     covered_pairs = (similarity_matrix > threshold).sum()  # 统计符合条件的对的数量
     return covered_pairs
 
-def save_alignment_matrix(zt, zi, patient_ids, output_dir):
+def calculate_alignment_matrix(zt, zi, patient_ids):
     """
-    计算对齐矩阵，保存alignment_matrix.json和diagonal_similarity.json
+    计算对齐矩阵
     """
     similarity_matrix = cosine_similarity(zt.cpu().detach().numpy(), zi.cpu().detach().numpy())
 
@@ -72,11 +73,6 @@ def save_alignment_matrix(zt, zi, patient_ids, output_dir):
 
     # 提取自己对应自己的相似度（取对角线）
     diagonal = np.diag(similarity_matrix)
-
-    # 保存 diagonal_similarity.json
-    similarity_dict = {patient_id: float(sim) for patient_id, sim in zip(patient_ids, diagonal)}
-    with open(os.path.join(output_dir, "diagonal_similarity.json"), "w") as f:
-        json.dump(similarity_dict, f, indent=2)
 
     # 准备 alignment_result 内容
     alignment_result = {
@@ -90,7 +86,6 @@ def save_alignment_matrix(zt, zi, patient_ids, output_dir):
     return alignment_result
 
 
-# 定义主函数
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--txt_dir", required=True)
@@ -135,18 +130,20 @@ def main():
         all_z_t = torch.cat(all_z_t, dim=0)
         all_z_i = torch.cat(all_z_i, dim=0)
 
-        # 保存每个 epoch 的 embeddings
-        save_embeddings_per_patient(epoch, all_z_t, all_z_i, args.output_dir, ds.ids)
+        # 仅在最后一个 epoch 保存 embeddings 和对齐矩阵
+        if epoch == 19:
+            # 保存每个 epoch 的 embeddings
+            save_embeddings_per_patient(all_z_t, all_z_i, args.output_dir, ds.ids)
 
-        # 计算并保存对齐矩阵，同时保存 diagonal_similarity.json
-        alignment_result = save_alignment_matrix(all_z_t, all_z_i, ds.ids, args.output_dir)
+            # 计算并保存对齐矩阵
+            alignment_result = calculate_alignment_matrix(all_z_t, all_z_i, ds.ids)
 
-        # 输出对齐矩阵为 JSON 格式
-        print(json.dumps(alignment_result))
+            # 输出对齐矩阵为 JSON 格式
+            print(json.dumps(alignment_result))
 
         # 保存模型
-        torch.save(net.state_dict(), f"{args.output_dir}/tcmt_ep{epoch}.pt")
-
+        torch.save(net.state_dict(), f"{args.output_dir}/tcmt.pt")
 
 if __name__ == "__main__":
     main()
+

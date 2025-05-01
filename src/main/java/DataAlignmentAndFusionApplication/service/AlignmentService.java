@@ -1,13 +1,12 @@
 package DataAlignmentAndFusionApplication.service;
 
-import DataAlignmentAndFusionApplication.model.dto.AlignmentRequest;
-import DataAlignmentAndFusionApplication.model.entity.AlignmentRecord;
-import DataAlignmentAndFusionApplication.model.entity.AlignmentResult;
+import DataAlignmentAndFusionApplication.model.vo.AlignmentVO;
+import DataAlignmentAndFusionApplication.util.Result;
 
 import java.util.List;
 
 public interface AlignmentService {
-    AlignmentResult alignTextAndImage() throws Exception;
+    Result<String> alignTextAndImage() throws Exception;
 
-    List<AlignmentRecord> getAllResults();
+    List<AlignmentVO> getAllResults();
 }

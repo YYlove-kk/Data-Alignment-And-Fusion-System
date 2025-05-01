@@ -27,9 +27,6 @@ public class UploadMessageListener {
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private UploadRecordMapper uploadRecordMapper;
-
-    @Autowired
     private UploadRecordService uploadRecordService;
 
     @Value("${mq.cleaning-to-database}")
@@ -56,7 +53,7 @@ public class UploadMessageListener {
             if (fileName.endsWith(".zip")) {
                 scriptPath = appConfig.getImageEmbedPath(); // 针对 DICOM 图像
                 String outputPath = runPythonScript(interpreter, scriptPath,
-                        "--patient_folder", message.getRawPath(),
+                        "--source_folder", message.getRawPath(),
                         "--output_dir", message.getOutputDir()+"image/");
 
                 if (outputPath.equals("image/")) {

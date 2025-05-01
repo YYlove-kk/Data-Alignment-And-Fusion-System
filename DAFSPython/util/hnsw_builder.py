@@ -7,6 +7,19 @@ from neo4j import GraphDatabase
 # 连接到 Neo4j 数据库
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12345678"))
 
+# 获取所有 uuid → tag 的映射
+def get_node_tag_map(driver):
+    tag_map = {}
+    with driver.session() as session:
+        result = session.run("""
+        MATCH (n)
+        WHERE exists(n.uuid) AND exists(n.tag)
+        RETURN n.uuid AS uuid, n.tag AS tag
+        """)
+        for record in result:
+            tag_map[record["uuid"]] = record["tag"]
+    return tag_map
+
 def build_hnsw_index(text_embed_paths, image_embed_paths, dim):
     p = hnswlib.Index(space='cosine', dim=dim * 2)  # 因为要拼接，维度翻倍
     p.init_index(max_elements=len(text_embed_paths), ef_construction=200, M=16)
@@ -24,27 +37,27 @@ def build_hnsw_index(text_embed_paths, image_embed_paths, dim):
         index_to_uuid[i] = uuid
     return p, index_to_uuid
 
+
+# 构建跨模态相似边
 def create_similar_edges(p, index_to_uuid, driver, tag):
     with driver.session() as s:
         for i in range(len(index_to_uuid)):
-            # 进行相似性查询
             labels, distances = p.knn_query(p.get_items([i])[0], k=20)
             for j, label in enumerate(labels[0]):
                 if i != label:
+                    uuid1, uuid2 = index_to_uuid[i], index_to_uuid[label]
                     sim = 1 - distances[0][j]
                     if sim >= 0.7:
-                        uuid1, uuid2 = index_to_uuid[i], index_to_uuid[label]
-                        # 创建跨模态相似关系
                         s.run("""
-                        MATCH (vt:VisitText {uuid: $uuid1}), (vi:VisitImage {uuid: $uuid2})
-                        MERGE (vt)-[r:MULTI_MODAL_SIMILAR {weight: $weight, tag: $tag}]->(vi)
+                        MATCH (vt:VisitText {uuid: $uuid1, tag: $tag}), (vi:VisitImage {uuid: $uuid2, tag: $tag})
+                        MERGE (vt)-[:MULTI_MODAL_SIMILAR {weight: $weight, tag: $tag}]->(vi)
                         """, uuid1=uuid1, uuid2=uuid2, weight=sim, tag=tag)
-                        # 反向关系，可根据需求决定是否保留
                         s.run("""
-                        MATCH (vi:VisitImage {uuid: $uuid1}), (vt:VisitText {uuid: $uuid2})
-                        MERGE (vi)-[r:MULTI_MODAL_SIMILAR {weight: $weight, tag: $tag}]->(vt)
+                        MATCH (vi:VisitImage {uuid: $uuid1, tag: $tag}), (vt:VisitText {uuid: $uuid2, tag: $tag})
+                        MERGE (vi)-[:MULTI_MODAL_SIMILAR {weight: $weight, tag: $tag}]->(vt)
                         """, uuid1=uuid1, uuid2=uuid2, weight=sim, tag=tag)
 
+# 构建单模态相似边
 def create_single_modal_edges(p, index_to_uuid, driver, tag, is_text):
     node_label = "VisitText" if is_text else "VisitImage"
     with driver.session() as s:
@@ -52,20 +65,21 @@ def create_single_modal_edges(p, index_to_uuid, driver, tag, is_text):
             labels, distances = p.knn_query(p.get_items([i])[0], k=20)
             for j, neighbor_idx in enumerate(labels[0]):
                 if i != neighbor_idx:
+                    uuid1 = index_to_uuid[i]
+                    uuid2 = index_to_uuid[neighbor_idx]
                     sim = 1 - distances[0][j]
                     if sim >= 0.7:
-                        uuid1 = index_to_uuid[i]
-                        uuid2 = index_to_uuid[neighbor_idx]
                         s.run(f"""
-                        MATCH (a:{node_label} {{uuid: $uuid1}}), (b:{node_label} {{uuid: $uuid2}})
+                        MATCH (a:{node_label} {{uuid: $uuid1, tag: $tag}}), (b:{node_label} {{uuid: $uuid2, tag: $tag}})
                         MERGE (a)-[:SINGLE_MODAL_SIMILAR {{weight: $weight, tag: $tag}}]->(b)
                         """, uuid1=uuid1, uuid2=uuid2, weight=sim, tag=tag)
 
 
 def run_hnsw_builder(patient_id, tag, dim, mode):
     try:
-        text_embed_paths = glob.glob(f"data/{patient_id}/text/*.npy")
-        image_embed_paths = glob.glob(f"data/{patient_id}/image/*.npy")
+
+        text_embed_paths = glob.glob(f"data/align/reduce/{patient_id}/{patient_id}_z_t.npy")
+        image_embed_paths = glob.glob(f"data/align/reduce/{patient_id}/{patient_id}_z_i.npy")
 
         if not text_embed_paths or not image_embed_paths:
             print(f"未找到患者 {patient_id} 的嵌入向量文件，请检查路径是否正确。")

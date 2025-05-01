@@ -1,13 +1,9 @@
 package DataAlignmentAndFusionApplication.controller;
 
-import DataAlignmentAndFusionApplication.config.AppConfig;
-import DataAlignmentAndFusionApplication.model.dto.AlignmentRequest;
-import DataAlignmentAndFusionApplication.model.entity.AlignmentRecord;
-import DataAlignmentAndFusionApplication.model.entity.AlignmentResult;
+import DataAlignmentAndFusionApplication.model.vo.AlignmentVO;
 import DataAlignmentAndFusionApplication.service.AlignmentService;
+import DataAlignmentAndFusionApplication.util.Result;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,10 +12,11 @@ import java.util.List;
 @RequestMapping("/api/alignment")
 public class AlignmentController {
     @Autowired
-    private  AlignmentService alignmentService;
+    private AlignmentService alignmentService;
+
 
     @PostMapping("/align")
-    public AlignmentResult align() {
+    public Result<String> align() {
         try {
             // 调用服务层方法进行对齐操作
             return alignmentService.alignTextAndImage();
@@ -31,7 +28,7 @@ public class AlignmentController {
     }
 
     @GetMapping("/list")
-    public List<AlignmentRecord> listAll() {
+    public List<AlignmentVO> listAll() {
         return alignmentService.getAllResults();
     }
 }

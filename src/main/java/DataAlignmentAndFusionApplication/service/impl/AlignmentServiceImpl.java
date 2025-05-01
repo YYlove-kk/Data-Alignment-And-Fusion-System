@@ -3,11 +3,10 @@ package DataAlignmentAndFusionApplication.service.impl;
 import DataAlignmentAndFusionApplication.config.AppConfig;
 import DataAlignmentAndFusionApplication.mapper.AlignmentResultMapper;
 import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
-import DataAlignmentAndFusionApplication.model.entity.AlignmentRecord;
 import DataAlignmentAndFusionApplication.model.entity.AlignmentResult;
-import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
+import DataAlignmentAndFusionApplication.model.vo.AlignmentVO;
 import DataAlignmentAndFusionApplication.service.AlignmentService;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import DataAlignmentAndFusionApplication.util.Result;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -35,77 +34,63 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
     private UploadRecordMapper uploadRecordMapper;
 
     @Override
-    public AlignmentResult alignTextAndImage() throws Exception {
-        // 构造参数列表
-        String dataDir = appConfig.getUploadOutputDir();
-        List<String> arguments = List.of(
-                "--txt_dir", dataDir+"text/",
-                "--img_dir", dataDir+"image/",
-                "--output_dir", appConfig.getAlignOutputPath()
-        );
+    public Result<String> alignTextAndImage() throws Exception {
+        try {
+            // 构造参数列表
+            String dataDir = appConfig.getUploadOutputDir();
+            List<String> arguments = List.of(
+                    "--txt_dir", dataDir + "text/",
+                    "--img_dir", dataDir + "image/",
+                    "--output_dir", appConfig.getAlignOutputPath()
+            );
 
-        // 调用 Python 脚本并获取结果
-        String result = runPythonScript(appConfig.getAlignScriptPath(), arguments);
+            // 调用 Python 脚本并获取结果
+            String result = runPythonScript(appConfig.getAlignScriptPath(), arguments);
 
-        // 解析 Python 返回的 JSON 数据
-        JSONObject json = new JSONObject(result);
-        JSONArray alignmentMatrix = json.getJSONArray("alignment_matrix");
-        double semanticAccuracy = json.getDouble("semantic_accuracy");
-        int alignmentCoverage = json.getInt("alignment_coverage");
+            // 解析 Python 返回的 JSON 数据
+            JSONObject json = new JSONObject(result);
+            JSONArray alignmentMatrix = json.getJSONArray("alignment_matrix");
+            JSONArray diagonalSimilarity = json.getJSONArray("diagonal_similarity");
+            JSONArray patientIds = json.getJSONArray("patient_ids");
+            double semanticAccuracy = json.getDouble("semantic_accuracy");
+            int alignmentCoverage = json.getInt("alignment_coverage");
 
-        // 将对齐结果转换为 AlignmentResult 对象
-        AlignmentResult alignmentResult = new AlignmentResult();
-        // 使用 ObjectMapper 将 JSONArray 转换为 JSON 字符串
-        ObjectMapper objectMapper = new ObjectMapper();
-        String alignmentMatrixJsonString = objectMapper.writeValueAsString(alignmentMatrix);
-        alignmentResult.setAlignmentMatrix(alignmentMatrixJsonString);  // 将其保存为字符串
+            // 构造 AlignmentResult 对象
+            AlignmentResult alignmentResult = new AlignmentResult();
+            ObjectMapper objectMapper = new ObjectMapper();
+            alignmentResult.setAlignmentMatrix(objectMapper.writeValueAsString(alignmentMatrix));
+            alignmentResult.setSemanticAccuracy(semanticAccuracy);
+            alignmentResult.setAlignmentCoverage(alignmentCoverage);
+            alignmentResult.setDiagonalSimilarity(diagonalSimilarity.toString());
+            alignmentResult.setSourceIds(patientIds.toString());
 
-        alignmentResult.setSemanticAccuracy(semanticAccuracy);
-        alignmentResult.setAlignmentCoverage(alignmentCoverage);
+            // 保存结果到数据库
+            save(alignmentResult);
 
-        // 保存到数据库
-        save(alignmentResult);
-
-        return alignmentResult;
+            // 返回封装的成功结果
+            return Result.success("对齐成功");
+        } catch (Exception e) {
+            e.printStackTrace(); // 可选：记录日志
+            return Result.error(500, "对齐失败: " + e.getMessage());
+        }
     }
 
+
     @Override
-    public List<AlignmentRecord> getAllResults() {
-        File[] files = new File(appConfig.getAlignOutputPath()).listFiles();
+    public List<AlignmentVO> getAllResults() {
+        List<AlignmentResult> resultList = list();
+        List<AlignmentVO> alignmentVOList = new ArrayList<>();
+        for (AlignmentResult result : resultList) {
+            AlignmentVO vo = new AlignmentVO();
 
-        // 1. 提取 patientId
-        Set<String> patientIds = new HashSet<>();
-        for (File file : files) {
-            String fileName = file.getName();
-            if (fileName.contains("_z_t_epoch")) {
-                String patientId = fileName.split("_z_t_epoch")[0];
-                patientIds.add(patientId);
-            }
+            vo.setSourceIds(result.getSourceIds());
+            vo.setAccuracy(result.getSemanticAccuracy());
+            vo.setCoverage(String.valueOf(result.getAlignmentCoverage())); // int 转为 String
+
+            alignmentVOList.add(vo);
         }
 
-        // 2. 读取 semanticAccuracyMap
-        Map<String, Double> semanticAccuracyMap = loadSemanticSimilarity(appConfig.getAlignOutputPath());
-
-        // 3. 查询并组装
-        List<AlignmentRecord> resultList = new ArrayList<>();
-
-        for (String patientId : patientIds) {
-            UploadRecord uploadRecord = uploadRecordMapper.selectOne(
-                    new QueryWrapper<UploadRecord>()
-                            .eq("patient_id", patientId)
-                            .eq("status", "COMPLETED")
-            );
-            if (uploadRecord != null) {
-                AlignmentRecord record = new AlignmentRecord();
-                record.setPatientId(patientId);
-                record.setFileName(uploadRecord.getFileName());
-                record.setSemanticSimilarity(semanticAccuracyMap.getOrDefault(patientId, null));  // 防止没有的情况
-
-                resultList.add(record);
-            }
-        }
-
-        return resultList;
+        return alignmentVOList;
     }
 
     private String runPythonScript(String scriptPath, List<String> arguments) throws IOException, InterruptedException {

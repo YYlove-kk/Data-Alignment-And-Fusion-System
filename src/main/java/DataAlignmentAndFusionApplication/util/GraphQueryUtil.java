@@ -40,8 +40,14 @@ public class GraphQueryUtil {
              Session session = driver.session()) {
 
             // 查询节点
-            session.run("MATCH (n) WHERE n.tag = $tag RETURN id(n) AS id, labels(n)[0] AS type, n.id AS label",
-                            Map.of("tag", tag))
+
+            String nodeCypher = """
+                    MATCH (n)
+                    WHERE n.tag = $tag
+                    RETURN id(n) AS id, labels(n)[0] AS type, coalesce(n.id, n.uuid, 'unknown') AS label
+                    """;
+
+            session.run(nodeCypher, Map.of("tag", tag))
                     .forEachRemaining(record -> {
                         GraphVO.Node node = new GraphVO.Node();
                         node.setId(String.valueOf(record.get("id").asInt()));
@@ -68,13 +74,13 @@ public class GraphQueryUtil {
                     });
 
             // 查询关系
-            String cypher = """
-                MATCH (n)-[r]->(m)
-                WHERE n.tag = $tag AND m.tag = $tag
-                RETURN id(n) AS source, id(m) AS target, type(r) AS relation, r.weight AS weight
-                """;
+            String edgeCypher = """
+                    MATCH (n)-[r]->(m)
+                    WHERE n.tag = $tag AND m.tag = $tag AND r.tag = $tag
+                    RETURN id(n) AS source, id(m) AS target, type(r) AS relation, r.weight AS weight
+                    """;
 
-            session.run(cypher, Map.of("tag", tag))
+            session.run(edgeCypher, Map.of("tag", tag))
                     .forEachRemaining(record -> {
                         String source = String.valueOf(record.get("source").asInt());
                         String target = String.valueOf(record.get("target").asInt());

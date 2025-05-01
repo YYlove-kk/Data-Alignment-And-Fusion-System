@@ -20,7 +20,7 @@ public class UploadMessage implements Serializable {
     private String outputDir;
     private String outputPath;
     private String fileName;
-    private String patientId;
+    private String sourceId;
     private String taskId;
     private String status;
     private String modalityType;

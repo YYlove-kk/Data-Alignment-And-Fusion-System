@@ -24,5 +24,11 @@ public class AlignmentResult {
     private double semanticAccuracy;  // 语义准确率
 
     @TableField("alignment_coverage")
-    private int alignmentCoverage;    // 对齐覆盖数
+    private int alignmentCoverage;// 对齐覆盖数
+
+    // diagonal_similarity：以 JSON 字符串形式保存
+    private String diagonalSimilarity;
+
+    // patient_ids：以 JSON 字符串形式保存
+    private String sourceIds;
 }

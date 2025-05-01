@@ -21,7 +21,7 @@ public class FusionRecord {
     /**
      * 
      */
-    private String patientId;
+    private String sourceId;
 
     /**
      * 

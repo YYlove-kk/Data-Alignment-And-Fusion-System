@@ -1,9 +1,10 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
-import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
 import DataAlignmentAndFusionApplication.model.dto.GraphReq;
+import DataAlignmentAndFusionApplication.model.entity.BuildRecord;
 import DataAlignmentAndFusionApplication.model.vo.GraphVO;
+import DataAlignmentAndFusionApplication.service.BuildRecordService;
 import DataAlignmentAndFusionApplication.service.GraphService;
 import DataAlignmentAndFusionApplication.util.GraphQueryUtil;
 
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -26,20 +28,31 @@ public class GraphServiceImpl implements GraphService {
     @Autowired
     private GraphQueryUtil graphQueryUtil;
 
+    @Autowired
+    private BuildRecordService buildRecordService;
+
+
     @Override
     public GraphVO buildKnowledgeGraph(GraphReq req) {
 
-        String patientId = req.getPatientId();
+        List<String> sourceIds = req.getSourceIds();
         int mode = req.getMode().getCode();
         // 生成唯一的 tag 值
         int tag = generateTag();
 
-        // 1. 调用 Python 脚本，导入数据
-        runScript(appConfig.getInterpreterPath(), appConfig.getNeo4jScriptPath(), patientId, tag, mode);
+        for(String sourceId: sourceIds) {
+            // 1. 调用 Python 脚本，导入数据
+            runScript(appConfig.getInterpreterPath(), appConfig.getNeo4jScriptPath(), sourceId, tag, mode);
 
-        // 调用 hnsw_builder.py
-        runScript(appConfig.getInterpreterPath(), appConfig.getKnswScriptPath(), patientId, tag, mode);
+            // 调用 hnsw_builder.py
+            runScript(appConfig.getInterpreterPath(), appConfig.getKnswScriptPath(), sourceId, tag, mode);
 
+            BuildRecord record = new BuildRecord();
+            record.setSourceId(sourceId);
+            record.setGraphTag(tag);
+            record.setMode(mode);
+            buildRecordService.save(record);
+        }
         // 2. 从 Neo4j 查询知识图谱
         return graphQueryUtil.queryGraphByTag(tag);
     }
@@ -49,12 +62,12 @@ public class GraphServiceImpl implements GraphService {
         return tagCounter.getAndIncrement();
     }
 
-    private void runScript(String executable, String scriptPath, String patientId, int tag, int mode) {
+    private void runScript(String executable, String scriptPath, String sourceId, int tag, int mode) {
         // 组装参数
         String[] command = new String[]{
                 executable,
                 scriptPath,
-                patientId,
+                sourceId,
                 String.valueOf(tag),
                 String.valueOf(mode)
         };

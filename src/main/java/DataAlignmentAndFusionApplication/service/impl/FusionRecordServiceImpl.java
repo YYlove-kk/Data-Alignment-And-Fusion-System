@@ -39,12 +39,33 @@ public class FusionRecordServiceImpl extends ServiceImpl<FusionRecordMapper, Fus
     @Autowired
     private GraphQueryUtil graphQueryUtil;
 
+    @Override
+    public GraphVO fuseGraph(GraphReq req) {
+        List<String> sourceIds = req.getSourceIds();
+        int graphTag = req.getGraphTag();
+
+        for (String sourceId : sourceIds) {
+
+            if (checkFusionRecord(sourceId, graphTag)) {
+                System.out.println(sourceId + " 已经与知识图谱 " + graphTag + " 融合过，跳过融合操作。");
+                return null;
+            }
+            // 调用 Python 脚本进行融合操作
+            callPythonScript(sourceId, graphTag);
+            // 插入融合记录
+            insertFusionRecord(sourceId, graphTag);
+        }
+
+
+        return graphQueryUtil.queryGraphByTag(graphTag);
+    }
+
     /**
      * 检查 .npy 文件和知识图谱是否已经融合过
      */
-    private boolean checkFusionRecord(String patientId, int graphTag) {
+    private boolean checkFusionRecord(String sourceId, int graphTag) {
         Map<String, Object> queryMap = new HashMap<>();
-        queryMap.put("patient_id", patientId);
+        queryMap.put("source_id", sourceId);
         queryMap.put("graph_tag", graphTag);
         List<FusionRecord> records = fusionRecordMapper.selectByMap(queryMap);
         return !records.isEmpty();
@@ -52,14 +73,13 @@ public class FusionRecordServiceImpl extends ServiceImpl<FusionRecordMapper, Fus
 
     /**
      * 调用 Python 脚本进行融合操作
-
      */
-    private void callPythonScript(String patientId, int graphTag) {
+    private void callPythonScript(String sourceId, int graphTag) {
         try {
             String interpreter = appConfig.getInterpreterPath(); // 比如 "python3"
             String scriptPath = appConfig.getFusionScriptPath();
             // 构建 Python 命令
-            ProcessBuilder pb = new ProcessBuilder(interpreter, scriptPath, patientId, String.valueOf(graphTag));
+            ProcessBuilder pb = new ProcessBuilder(interpreter, scriptPath, sourceId, String.valueOf(graphTag));
             // 启动进程
             Process process = pb.start();
 
@@ -82,28 +102,12 @@ public class FusionRecordServiceImpl extends ServiceImpl<FusionRecordMapper, Fus
         }
     }
 
-    @Override
-    public GraphVO fuseGraph(GraphReq req) {
-        String patientId = req.getPatientId();
-        int graphTag  = req.getGraphTag();
-        if (checkFusionRecord(patientId, graphTag)) {
-            System.out.println(patientId + " 已经与知识图谱 " + graphTag + " 融合过，跳过融合操作。");
-            return null;
-        }
-        // 调用 Python 脚本进行融合操作
-        callPythonScript(patientId, graphTag);
-        // 插入融合记录
-        insertFusionRecord(patientId, graphTag);
-
-        return graphQueryUtil.queryGraphByTag( graphTag);
-    }
-
     /**
      * 将 .npy 文件和知识图谱的融合记录插入到 MySQL 表中
      */
-    private void insertFusionRecord(String patientId, int graphTag) {
+    private void insertFusionRecord(String sourceId, int graphTag) {
         FusionRecord record = new FusionRecord();
-        record.setPatientId(patientId);
+        record.setSourceId(sourceId);
         record.setGraphTag(graphTag);
         fusionRecordMapper.insert(record);
     }
@@ -115,11 +119,11 @@ public class FusionRecordServiceImpl extends ServiceImpl<FusionRecordMapper, Fus
                 AuthTokens.basic("neo4j", "12345678"));
              Session session = driver.session()) {
             String cypher = """
-            MATCH (n)
-            WHERE exists(n.tag)
-            RETURN DISTINCT n.tag AS tag
-            ORDER BY tag
-        """;
+                        MATCH (n)
+                        WHERE exists(n.tag)
+                        RETURN DISTINCT n.tag AS tag
+                        ORDER BY tag
+                    """;
 
             for (Result it = session.run(cypher); it.hasNext(); ) {
                 Record record = it.next();

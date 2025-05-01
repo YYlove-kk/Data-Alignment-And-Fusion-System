@@ -24,7 +24,7 @@ public class UploadRecord {
      */
     private String taskId;
 
-    private String patientId;
+    private String sourceId;
 
     private String fileName;
 

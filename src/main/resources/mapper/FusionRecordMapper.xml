@@ -6,11 +6,11 @@
 
     <resultMap id="BaseResultMap" type="DataAlignmentAndFusionApplication.model.entity.FusionRecord">
             <id property="id" column="id" />
-            <result property="patientId" column="patient_id" />
+            <result property="sourceId" column="source_id"/>
             <result property="graphTag" column="graph_tag" />
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,npy_file_name,graph_tag
+        id,source_id,graph_tag
     </sql>
 </mapper>
