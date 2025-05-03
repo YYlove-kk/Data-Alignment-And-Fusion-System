@@ -2,12 +2,17 @@ package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
 import DataAlignmentAndFusionApplication.mapper.AlignmentResultMapper;
+import DataAlignmentAndFusionApplication.mapper.JointEmbeddingRelationMapper;
 import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
 import DataAlignmentAndFusionApplication.model.entity.AlignmentResult;
+import DataAlignmentAndFusionApplication.model.entity.JointEmbeddingRelation;
 import DataAlignmentAndFusionApplication.model.vo.AlignmentVO;
 import DataAlignmentAndFusionApplication.service.AlignmentService;
+import DataAlignmentAndFusionApplication.util.CsvImporter;
 import DataAlignmentAndFusionApplication.util.Result;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONArray;
@@ -22,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -31,16 +37,20 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
     private AppConfig appConfig;
 
     @Autowired
-    private UploadRecordMapper uploadRecordMapper;
+    private CsvImporter csvImporter;
+
+
+    @Autowired
+    private JointEmbeddingRelationMapper jointEmbeddingRelationMapper;
 
     @Override
     public Result<String> alignTextAndImage() throws Exception {
         try {
             // 构造参数列表
-            String dataDir = appConfig.getUploadOutputDir();
+            String dataDir = appConfig.getAlignSourcePath();
             List<String> arguments = List.of(
-                    "--txt_dir", dataDir + "text/",
-                    "--img_dir", dataDir + "image/",
+                    "--txt_dir", dataDir + "text",
+                    "--img_dir", dataDir + "image",
                     "--output_dir", appConfig.getAlignOutputPath()
             );
 
@@ -51,9 +61,21 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
             JSONObject json = new JSONObject(result);
             JSONArray alignmentMatrix = json.getJSONArray("alignment_matrix");
             JSONArray diagonalSimilarity = json.getJSONArray("diagonal_similarity");
-            JSONArray patientIds = json.getJSONArray("patient_ids");
             double semanticAccuracy = json.getDouble("semantic_accuracy");
-            int alignmentCoverage = json.getInt("alignment_coverage");
+            int alignmentCoverage = json.getInt("coverage");
+
+            JSONArray alignedFilenames = json.getJSONArray("aligned_filenames");
+            List<String> filenamePairs = new ArrayList<>();
+
+            for (int i = 0; i < alignedFilenames.length(); i++) {
+                JSONObject pair = alignedFilenames.getJSONObject(i);
+                String textFile = pair.getString("text_file");
+                String imageFile = pair.getString("image_file");
+
+                // 存成格式化字符串，可以根据需要调整格式
+                String formatted = String.format("Text: %s, Image: %s", textFile, imageFile);
+                filenamePairs.add(formatted);
+            }
 
             // 构造 AlignmentResult 对象
             AlignmentResult alignmentResult = new AlignmentResult();
@@ -62,7 +84,7 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
             alignmentResult.setSemanticAccuracy(semanticAccuracy);
             alignmentResult.setAlignmentCoverage(alignmentCoverage);
             alignmentResult.setDiagonalSimilarity(diagonalSimilarity.toString());
-            alignmentResult.setSourceIds(patientIds.toString());
+            alignmentResult.setFilenamePairs(filenamePairs);
 
             // 保存结果到数据库
             save(alignmentResult);
@@ -83,7 +105,7 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
         for (AlignmentResult result : resultList) {
             AlignmentVO vo = new AlignmentVO();
 
-            vo.setSourceIds(result.getSourceIds());
+            vo.setFilenamePairs(result.getFilenamePairs());
             vo.setAccuracy(result.getSemanticAccuracy());
             vo.setCoverage(String.valueOf(result.getAlignmentCoverage())); // int 转为 String
 
@@ -91,6 +113,18 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
         }
 
         return alignmentVOList;
+    }
+
+    @Override
+    public List<String> getPatients() {
+        // 使用 LambdaQueryWrapper 去重查询所有 patient_id
+        return jointEmbeddingRelationMapper.selectList(
+                        new LambdaQueryWrapper<JointEmbeddingRelation>()
+                                .select(JointEmbeddingRelation::getPatientId)
+                                .groupBy(JointEmbeddingRelation::getPatientId)
+                ).stream()
+                .map(JointEmbeddingRelation::getPatientId)
+                .collect(Collectors.toList());
     }
 
     private String runPythonScript(String scriptPath, List<String> arguments) throws IOException, InterruptedException {
@@ -111,7 +145,12 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
         while ((line = reader.readLine()) != null) {
             output.append(line).append("\n");
         }
-
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith("[CSV_PATH]")) {
+                String csvPath = line.substring("[CSV_PATH]".length());
+                csvImporter.importFromCsv(csvPath);
+            }
+        }
         // 获取脚本的退出值
         int exitCode = process.waitFor();
         if (exitCode != 0) {

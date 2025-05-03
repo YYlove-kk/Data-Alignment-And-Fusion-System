@@ -3,11 +3,12 @@
 # Role: Evaluate alignment accuracy (Top-1, MRR)
 # ---------------------------------------------
 import os
-import numpy as np
 import glob
 import tqdm
 import torch
+import numpy as np
 from model.model_tcmt import TCMT
+
 
 
 def load_pairs(txt_dir, img_dir, model, device):

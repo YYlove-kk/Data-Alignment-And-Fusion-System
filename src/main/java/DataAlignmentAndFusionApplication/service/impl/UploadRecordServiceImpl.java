@@ -1,9 +1,10 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
+import DataAlignmentAndFusionApplication.mapper.EmbedRecordMapper;
 import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
-import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
 import DataAlignmentAndFusionApplication.model.dto.UploadMessage;
+import DataAlignmentAndFusionApplication.model.dto.UploadReq;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.util.Result;
@@ -28,6 +29,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -45,6 +47,10 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
     private UploadRecordMapper uploadRecordMapper;
 
     @Autowired
+    private EmbedRecordMapper embedRecordMapper;
+
+
+    @Autowired
     private RabbitTemplate rabbitTemplate;
 
     @Value("${mq.upload-to-cleaning}")
@@ -52,7 +58,7 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
 
     private final AppConfig appConfig;
 
-    private final Path rawDir;
+
     private final Path reportDir;
     private final Path cleanDir;
     private final Path outputDir;
@@ -61,58 +67,49 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
     @Autowired
     public UploadRecordServiceImpl(AppConfig appConfig, UploadRecordMapper uploadRecordMapper, RabbitTemplate rabbitTemplate) {
         this.appConfig = appConfig;
-        this.rawDir = Paths.get(appConfig.getUploadRawDir());
         this.reportDir = Paths.get(appConfig.getUploadReportDir());
         this.cleanDir = Paths.get(appConfig.getUploadCleanDir());
-        this.outputDir = Paths.get(appConfig.getUploadOutputDir());
+        this.outputDir = Paths.get(appConfig.getAlignSourcePath());
         this.schemaRegistry = Paths.get(appConfig.getSchemaRegistryPath());
 
     }
 
     @Override
-    public Result<String> uploadFile(FileUploadDTO dto) {
+    public Result<String> uploadFile(UploadReq req) {
         try {
             String taskId = UUID.randomUUID().toString();
-            String sourceId = dto.getSourceId();
-            MultipartFile file = dto.getFile();
+            String sourceId = req.getSourceId();
+            MultipartFile file = req.getFile();
             String fileName = file.getOriginalFilename();
-            String suffix = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+            String modalityType = req.getModalityType();
 
-            Path sourceDir = rawDir.resolve(sourceId);
-            Path targetDir;
+            Path rawDir = Paths.get(appConfig.getUploadDir()).resolve(sourceId);
 
-            if (suffix.equals("xlsx") || suffix.equals("xls") || suffix.equals("csv")) {
-                targetDir = sourceDir.resolve("text");
-            } else if (suffix.equals("zip")) {
-                targetDir = sourceDir.resolve("image");
-            } else {
-                return Result.error(500, "文件类型不支持");
-            }
+            Files.createDirectories(rawDir);
 
-            Files.createDirectories(targetDir);
 
-            String rawPath;
-            if (suffix.equals("zip")) {
-                Path zipPath = targetDir.resolve(fileName);
+            if (Objects.equals(modalityType, "IMAGE")) {
+                Path zipPath = rawDir.resolve(fileName);
                 Files.copy(file.getInputStream(), zipPath, StandardCopyOption.REPLACE_EXISTING);
-                unzip(zipPath.toFile(), targetDir.toFile());
+                unzip(zipPath.toFile(), rawDir.toFile());
                 Files.deleteIfExists(zipPath);
-                rawPath = targetDir.toString();
+
             } else {
-                Path targetPath = targetDir.resolve(fileName);
+                Path targetPath = rawDir.resolve(fileName);
                 Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-                rawPath = targetPath.toString();
+
             }
+
 
             UploadMessage message = UploadMessage.builder()
-                    .rawPath(rawPath)
+                    .rawDir(String.valueOf(rawDir))
                     .schemaRegistryPath(schemaRegistry.toString())
                     .reportDir(reportDir.toString())
                     .cleanDir(cleanDir.toString())
                     .outputDir(outputDir.toString())
                     .fileName(fileName)
-                    .institution(dto.getInstitution())
-                    .modalityType(dto.getModalityType())
+                    .institution(req.getInstitution())
+                    .modalityType(modalityType)
                     .taskId(taskId)
                     .sourceId(sourceId)
                     .status("WAITING")
@@ -144,7 +141,7 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
         for (UploadRecord record : waitingRecords) {
             UploadMessage message = UploadMessage.builder()
                     .taskId(record.getTaskId())
-                    .rawPath(record.getRawPath())
+                    .rawDir(record.getRawDir())
                     .schemaRegistryPath(schemaRegistry.toString())
                     .reportDir(reportDir.toString())
                     .cleanDir(cleanDir.toString())
@@ -153,7 +150,6 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
                     .institution(record.getInstitution())
                     .modalityType(record.getModalityType())
                     .sourceId(record.getSourceId())
-                    .status("PROCESSING")
                     .build();
 
             // 2. 更新状态
@@ -165,7 +161,6 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
 
         return Result.success("成功处理任务数量：" + waitingRecords.size());
     }
-
 
 
     @Override
@@ -211,7 +206,7 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
         UploadRecord record = new UploadRecord();
         record.setTaskId(message.getTaskId());
         record.setSourceId(message.getSourceId());
-        record.setRawPath(message.getRawPath());
+        record.setRawDir(message.getRawDir());
         record.setSchemaRegistryPath(message.getSchemaRegistryPath());
         record.setReportDir(message.getReportDir());
         record.setCleanDir(message.getCleanDir());
@@ -233,8 +228,8 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
     }
 
     @Override
-    public void updatePaths(String taskId, String cleanPath, String outputPath) {
-        if (taskId == null || cleanPath == null || outputPath == null) {
+    public void updatePaths(String taskId, String cleanPath, List<String> npyPaths) {
+        if (taskId == null || cleanPath == null || npyPaths == null) {
             throw new IllegalArgumentException("taskId, cleanPath,outputPath有空值");
         }
 
@@ -246,7 +241,7 @@ public class UploadRecordServiceImpl extends ServiceImpl<UploadRecordMapper, Upl
 
         // 更新路径
         record.setCleanPath(cleanPath);
-        record.setOutputPath(outputPath);
+        record.setSingleEmbedNpy(npyPaths);
 
         // 更新记录
         int updatedRows = uploadRecordMapper.updateById(record);

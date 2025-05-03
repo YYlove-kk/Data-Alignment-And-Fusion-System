@@ -8,16 +8,13 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfig {
 
     @Value("${data.upload-raw-dir}")
-    private String uploadRawDir;
+    private String uploadDir;
 
     @Value("${data.upload-report-dir}")
     private String uploadReportDir;
 
     @Value("${data.upload-clean-dir}")
     private String uploadCleanDir;
-
-    @Value("${data.upload-output-dir}")
-    private String uploadOutputDir;
 
     @Value("${algorithm.data-ingest}")
     private String dataIngestPath;
@@ -36,6 +33,9 @@ public class AppConfig {
 
     @Value("${data.align-output-dir}")
     private String alignOutputPath;
+
+    @Value("${data.align-source-dir}")
+    private String alignSourcePath;
 
     @Value("${algorithm.train-tcmt}")
     private String alignScriptPath;

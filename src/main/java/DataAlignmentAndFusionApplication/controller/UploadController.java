@@ -1,5 +1,5 @@
 package DataAlignmentAndFusionApplication.controller;
-import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
+import DataAlignmentAndFusionApplication.model.dto.UploadReq;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.service.UploadRecordService;
@@ -8,16 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/upload")
+@RequestMapping("/api/data")
 public class UploadController {
     @Autowired
     private UploadRecordService uploadRecordService;
 
     // 上传文件
-    @PostMapping("/data")
-    public Result<String> uploadFile(@ModelAttribute  FileUploadDTO dto) {
+    @PostMapping("/upload")
+    public Result<String> uploadFile(@ModelAttribute UploadReq req) {
         // 调用上传服务
-        return uploadRecordService.uploadFile(dto);
+        return uploadRecordService.uploadFile(req);
     }
 
     @PostMapping("/embed")

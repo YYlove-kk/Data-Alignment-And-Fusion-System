@@ -1,11 +1,13 @@
 package DataAlignmentAndFusionApplication.service;
 
-import DataAlignmentAndFusionApplication.model.dto.FileUploadDTO;
 import DataAlignmentAndFusionApplication.model.dto.UploadMessage;
+import DataAlignmentAndFusionApplication.model.dto.UploadReq;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.PageVO;
 import DataAlignmentAndFusionApplication.util.Result;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
 * @author 29857
@@ -14,7 +16,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 */
 public interface UploadRecordService extends IService<UploadRecord> {
     // 文件上传方法，返回上传结果
-    Result<String> uploadFile(FileUploadDTO dto);
+    Result<String> uploadFile(UploadReq req);
 
     Result<String> embedFile();
 
@@ -28,6 +30,6 @@ public interface UploadRecordService extends IService<UploadRecord> {
 
     void updateStatus(String taskId, String status);
 
-    void updatePaths(String taskId, String cleanPath, String outputPath);
+    void updatePaths(String taskId, String cleanPath, List<String> npyPaths);
 
 }

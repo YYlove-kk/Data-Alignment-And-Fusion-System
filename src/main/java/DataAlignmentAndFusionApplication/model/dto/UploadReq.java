@@ -4,7 +4,7 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 @Data
-public class FileUploadDTO {
+public class UploadReq {
     private String sourceId;
 
     private String modalityType;

@@ -9,4 +9,6 @@ public interface AlignmentService {
     Result<String> alignTextAndImage() throws Exception;
 
     List<AlignmentVO> getAllResults();
+
+    List<String> getPatients();
 }

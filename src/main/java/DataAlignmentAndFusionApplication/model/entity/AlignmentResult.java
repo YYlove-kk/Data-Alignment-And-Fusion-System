@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.util.Date;
+import java.util.List;
+
 import lombok.Data;
 
 /**
@@ -31,4 +33,6 @@ public class AlignmentResult {
 
     // patient_ids：以 JSON 字符串形式保存
     private String sourceIds;
+
+    private List<String> filenamePairs;
 }

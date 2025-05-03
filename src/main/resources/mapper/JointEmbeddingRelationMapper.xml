@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DataAlignmentAndFusionApplication.mapper.JointEmbeddingRelationMapper">
+
+    <resultMap id="BaseResultMap" type="DataAlignmentAndFusionApplication.model.entity.JointEmbeddingRelation">
+            <id property="id" column="id" />
+            <result property="patientId" column="patient_id" />
+            <result property="textFile" column="text_file" />
+            <result property="imageFile" column="image_file" />
+            <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,patient_id,text_file,image_file,created_at
+    </sql>
+</mapper>

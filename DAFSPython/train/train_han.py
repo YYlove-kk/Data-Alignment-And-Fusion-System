@@ -8,7 +8,7 @@ g = load_neo4j("bolt://localhost:7687")
 
 meta_paths = [
     [('Visit', 'SIMILAR', 'Visit')],
-    [('Visit', 'BELONGS_TO', 'Patient'), ('Patient', 'BELONGS_TO', 'Visit')]
+    [('Visit', 'BELONGS_TO', 'Source'), ('Source', 'BELONGS_TO', 'Visit')]
 ]
 
 model = HAN(meta_paths).cuda()

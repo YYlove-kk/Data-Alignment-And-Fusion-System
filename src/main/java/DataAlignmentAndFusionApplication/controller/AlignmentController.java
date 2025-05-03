@@ -27,8 +27,13 @@ public class AlignmentController {
         }
     }
 
-    @GetMapping("/list")
+    @GetMapping("/listResults")
     public List<AlignmentVO> listAll() {
         return alignmentService.getAllResults();
+    }
+
+    @GetMapping("/listPatients")
+    public List<String> listPatients() {
+        return alignmentService.getPatients();
     }
 }

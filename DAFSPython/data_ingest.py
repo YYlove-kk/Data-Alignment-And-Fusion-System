@@ -32,6 +32,12 @@ def preprocess_table(file_path: str, registry_path: str, report_dir: str, clean_
     # 2) 字段映射
     df_raw.columns = map_columns(df_raw.columns, registry_path)
 
+    # 检查缺失列并添加
+    required_columns = ["patient_id", "age", "gender","visit_time","name","admission_time", "discharge_time","chief_complaint","history","disease_name"]  # 列出必需的列
+    for col in required_columns:
+        if col not in df_raw.columns:
+            df_raw[col] = "未知"  # 或者给列填充默认值，比如 'Unknown' 或 0
+
     # 3) great‑expectations 校验
     # 创建上下文
     context = ge.get_context()
@@ -84,7 +90,7 @@ def main():
 
     args = parser.parse_args()
 
-    clean_path = preprocess_table(args.file, args.schema, args.report_dir, args.clean_dir)
+    clean_path = preprocess_table(args.file_path, args.registry_path, args.report_dir, args.clean_dir)
 
     print(clean_path)  # Java 侧从 stdout 读取
 

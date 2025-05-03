@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DataAlignmentAndFusionApplication.mapper.EmbedRecordMapper">
+
+    <resultMap id="BaseResultMap" type="DataAlignmentAndFusionApplication.model.entity.EmbedRecord">
+            <id property="id" column="id" />
+            <result property="npyName" column="npy_name" />
+            <result property="sourceId" column="source_id" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,npy_name,source_id
+    </sql>
+    <select id="selectDistinctPatientIdsBySourceId" resultType="java.lang.String">
+        SELECT DISTINCT jer.patient_id
+        FROM embed_record er
+                 JOIN joint_embedding_relation jer
+                      ON er.npy_name = jer.text_file OR er.npy_name = jer.image_file
+        WHERE er.source_id = #{sourceId}
+    </select>
+</mapper>

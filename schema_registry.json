@@ -1,13 +1,19 @@
 {
+  "老年人唯一标识符": "patient_id",
   "年龄": "age",
+  "AGE": "age",
   "性别": "gender",
-  "就诊时间": "visit_time",
-  "初步诊断": "diagnosis",
-  "病人编号": "patient_id",
+  "GENDER_NAME": "gender",
+  "最近更新时间": "visit_time",
+  "VISIT_DATE": "visit_time",
   "姓名": "name",
-  "住院号": "hospital_id",
-  "入院时间": "admission_time",
+  "PATIENT_NAME": "name",
+  "建档日期": "admission_time",
+  "REPORT_DATE": "admission_time",
+  "异常": "chief_complaint",
+  "IMAGING_FINDING": "chief_complaint",
+  "既往病史中其他疾病": "history",
+  "DISEASE_NAME": "disease_name",
   "出院时间": "discharge_time",
-  "主诉": "chief_complaint",
-  "既往史": "history"
+  "DISCHARGE_DATE": "discharge_time"
 }

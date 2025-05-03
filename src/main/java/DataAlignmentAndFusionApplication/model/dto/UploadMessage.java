@@ -6,13 +6,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class UploadMessage implements Serializable {
 
-    private String rawPath;
+    private String rawDir;
     private String schemaRegistryPath;
     private String reportDir;
     private String cleanDir;
@@ -25,6 +27,6 @@ public class UploadMessage implements Serializable {
     private String status;
     private String modalityType;
     private String institution;
-
+    private List<String> singleEmbedNpy;
 
 }

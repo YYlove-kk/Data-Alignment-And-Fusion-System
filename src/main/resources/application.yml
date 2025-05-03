@@ -52,12 +52,12 @@ mq:
 
 #文件路径
 data:
-  upload-raw-dir: data/upload/raw/
-  upload-clean-dir: data/upload/clean/
-  upload-report-dir: data/upload/report/
-  upload-output-dir: data/upload/output/
+  upload-raw-dir: data/upload/source
+  upload-clean-dir: data/upload/clean
+  upload-report-dir: data/upload/report
 
-  align-output-dir: data/align/output/
+  align-output-dir: data/align/output
+  align-source-dir: data/align
 
 #schemaRegistry路径
 schema-registry: schema_registry.json
@@ -68,8 +68,8 @@ algorithm:
   data-ingest: DAFSPython/data_ingest.py
   image-embed: DAFSPython/image_embed.py
   text-time-embed: DAFSPython/text_time_embed
-  train-tcmt: DAFSPython/train/train_tcmt.py
-  neo4j-import: DAFSPython/util/neo4j_import.py
+  train-tcmt: DAFSPython/joint_align.py
+  neo4j-import: DAFSPython/multi_build.py
   kpca_reduce: DAFSPython/kpca_reduce.py
   knsw_builder: DAFSPython/util/hnsw_builder.py
   fusion: DAFSPython/fusion.py

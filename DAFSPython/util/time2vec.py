@@ -18,7 +18,7 @@ class Time2Vec(nn.Module):
     def forward(self, time_input):
         """
         :param time_input: pandas.Timestamp or numpy.datetime64
-        :return: torch.Tensor of shape (dim,)
+        :return: torch.Tensor of shape (dim)
         """
         if not torch.is_tensor(time_input):
             # 将 datetime 转为 UNIX timestamp (float 秒数)
