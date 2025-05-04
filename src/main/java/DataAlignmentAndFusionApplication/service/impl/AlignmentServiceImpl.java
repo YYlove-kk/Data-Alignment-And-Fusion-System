@@ -49,8 +49,6 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
             // 构造参数列表
             String dataDir = appConfig.getAlignSourcePath();
             List<String> arguments = List.of(
-                    "--txt_dir", dataDir + "text",
-                    "--img_dir", dataDir + "image",
                     "--output_dir", appConfig.getAlignOutputPath()
             );
 
@@ -63,28 +61,16 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
             JSONArray diagonalSimilarity = json.getJSONArray("diagonal_similarity");
             double semanticAccuracy = json.getDouble("semantic_accuracy");
             int alignmentCoverage = json.getInt("coverage");
+            String patientIds = json.getString("patient_ids");
 
-            JSONArray alignedFilenames = json.getJSONArray("aligned_filenames");
-            List<String> filenamePairs = new ArrayList<>();
-
-            for (int i = 0; i < alignedFilenames.length(); i++) {
-                JSONObject pair = alignedFilenames.getJSONObject(i);
-                String textFile = pair.getString("text_file");
-                String imageFile = pair.getString("image_file");
-
-                // 存成格式化字符串，可以根据需要调整格式
-                String formatted = String.format("Text: %s, Image: %s", textFile, imageFile);
-                filenamePairs.add(formatted);
-            }
-
-            // 构造 AlignmentResult 对象
             AlignmentResult alignmentResult = new AlignmentResult();
             ObjectMapper objectMapper = new ObjectMapper();
             alignmentResult.setAlignmentMatrix(objectMapper.writeValueAsString(alignmentMatrix));
             alignmentResult.setSemanticAccuracy(semanticAccuracy);
             alignmentResult.setAlignmentCoverage(alignmentCoverage);
             alignmentResult.setDiagonalSimilarity(diagonalSimilarity.toString());
-            alignmentResult.setFilenamePairs(filenamePairs);
+            alignmentResult.setPatientIds(patientIds);
+//            alignmentResult.setFilenamePairs(filenamePairs);
 
             // 保存结果到数据库
             save(alignmentResult);
@@ -105,9 +91,10 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
         for (AlignmentResult result : resultList) {
             AlignmentVO vo = new AlignmentVO();
 
-            vo.setFilenamePairs(result.getFilenamePairs());
+            vo.setPatientIds(result.getPatientIds());
             vo.setAccuracy(result.getSemanticAccuracy());
             vo.setCoverage(String.valueOf(result.getAlignmentCoverage())); // int 转为 String
+            vo.setAlignmentMatrix(result.getAlignmentMatrix());
 
             alignmentVOList.add(vo);
         }

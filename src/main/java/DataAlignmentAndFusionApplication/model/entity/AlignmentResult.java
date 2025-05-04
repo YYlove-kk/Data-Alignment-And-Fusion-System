@@ -32,7 +32,7 @@ public class AlignmentResult {
     private String diagonalSimilarity;
 
     // patient_ids：以 JSON 字符串形式保存
-    private String sourceIds;
+    private String patientIds;
 
     private List<String> filenamePairs;
 }

@@ -13,16 +13,13 @@ public class GraphVO {
     @Data
     public static class Node {
         private String id;
-        private String name;
         private String type;
         private List<NodeDetail> nodeDetail;
 
         @Data
         public static class NodeDetail{
-            private String fileName;
-            private String modalityType;
-            private String institution;
-            private Date processTime;
+            private String textFile;
+            private String imageFile;
         }
 
     }

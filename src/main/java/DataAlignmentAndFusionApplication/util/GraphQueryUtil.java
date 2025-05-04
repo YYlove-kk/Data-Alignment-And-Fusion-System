@@ -1,6 +1,8 @@
 package DataAlignmentAndFusionApplication.util;
 
+import DataAlignmentAndFusionApplication.mapper.JointEmbeddingRelationMapper;
 import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
+import DataAlignmentAndFusionApplication.model.entity.JointEmbeddingRelation;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.GraphVO;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -30,7 +32,7 @@ public class GraphQueryUtil {
     private String password;
 
     @Autowired
-    private UploadRecordMapper uploadRecordMapper;
+    private JointEmbeddingRelationMapper jointEmbeddingRelationMapper;
 
     public GraphVO queryGraphByTag(int tag) {
         List<GraphVO.Node> nodes = new ArrayList<>();
@@ -51,20 +53,17 @@ public class GraphQueryUtil {
                     .forEachRemaining(record -> {
                         GraphVO.Node node = new GraphVO.Node();
                         node.setId(String.valueOf(record.get("id").asInt()));
-                        node.setName(record.get("label").isNull() ? "unknown" : record.get("label").asString());
-                        node.setType(record.get("type").asString());
+                        node.setType(record.get("label").isNull() ? "unknown" : record.get("label").asString());
 
                         if ("Patient".equals(node.getType())) {
-                            String patientId = node.getName();
-                            List<UploadRecord> uploadRecords = uploadRecordMapper.selectList(
-                                    new QueryWrapper<UploadRecord>().eq("patient_id", patientId));
-                            if (!uploadRecords.isEmpty()) {
-                                List<GraphVO.Node.NodeDetail> nodeDetails = uploadRecords.stream().map(ur -> {
+                            String patientId = node.getId();
+                            List<JointEmbeddingRelation> jointEmbeddingRelations = jointEmbeddingRelationMapper.selectList(
+                                    new QueryWrapper<JointEmbeddingRelation>().eq("patient_id", patientId));
+                            if (!jointEmbeddingRelations.isEmpty()) {
+                                List<GraphVO.Node.NodeDetail> nodeDetails = jointEmbeddingRelations.stream().map(ur -> {
                                     GraphVO.Node.NodeDetail d = new GraphVO.Node.NodeDetail();
-                                    d.setFileName(ur.getFileName());
-                                    d.setModalityType(ur.getModalityType());
-                                    d.setInstitution(ur.getInstitution());
-                                    d.setProcessTime(ur.getProcessTime());
+                                    d.setTextFile(ur.getTextFile());
+                                    d.setImageFile(ur.getImageFile());
                                     return d;
                                 }).collect(Collectors.toList());
                                 node.setNodeDetail(nodeDetails);

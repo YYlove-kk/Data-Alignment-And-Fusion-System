@@ -27,8 +27,7 @@ public class CsvImporter {
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
                 if (parts.length >= 3) {
-                    String jointId = parts[0]; // e.g., joint_patientA_00001.npy
-                    String patientId = extractPatientId(jointId);
+                    String patientId = parts[0]; // e.g., patientA_00001.npy
                     String textFile = parts[1];
                     String imageFile = parts[2];
 

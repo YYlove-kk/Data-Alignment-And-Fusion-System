@@ -104,7 +104,7 @@ def process_source_images(source_folder, model, time_encoder):
     return torch.stack(feature_vectors) if feature_vectors else None
 
 
-def save_source_embedding(features, output_dir, source_id, patient_name, patient_folder):
+def save_source_embedding(features, output_dir,patient_name, patient_folder):
     acquisition_date = extract_acquisition_date(patient_folder)
     timestamp = acquisition_date
     os.makedirs(output_dir, exist_ok=True)
@@ -137,7 +137,7 @@ if __name__ == "__main__":
         print(f"🔍 Processing patient: {patient_name}", file=sys.stderr)
         features = process_source_images(patient_path, model, time_encoder)
         if features is not None:
-            save_path = save_source_embedding(features, output_dir, source_id, patient_name, patient_path)
+            save_path = save_source_embedding(features, output_dir,patient_name, patient_path)
             result_paths.append(save_path)
             print(f"✅ Saved for {patient_name} -> {save_path}", file=sys.stderr)
 
