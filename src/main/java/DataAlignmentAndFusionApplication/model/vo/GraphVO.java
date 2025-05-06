@@ -14,7 +14,7 @@ public class GraphVO {
     public static class Node {
         private String id;
         private String type;
-        private List<NodeDetail> nodeDetail;
+        private NodeDetail nodeDetail;
 
         @Data
         public static class NodeDetail{

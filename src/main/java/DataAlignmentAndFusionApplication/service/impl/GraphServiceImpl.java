@@ -2,13 +2,17 @@ package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
 import DataAlignmentAndFusionApplication.mapper.EmbedRecordMapper;
+import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
 import DataAlignmentAndFusionApplication.model.dto.GraphReq;
 import DataAlignmentAndFusionApplication.model.entity.BuildRecord;
+import DataAlignmentAndFusionApplication.model.entity.GnnTrainingTask;
+import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.GraphVO;
 import DataAlignmentAndFusionApplication.service.BuildRecordService;
 import DataAlignmentAndFusionApplication.service.GraphService;
 import DataAlignmentAndFusionApplication.util.GraphQueryUtil;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +41,9 @@ public class GraphServiceImpl implements GraphService {
     @Autowired
     private EmbedRecordMapper embedRecordMapper;
 
+    @Autowired
+    private UploadRecordMapper uploadRecordMapper;
+
 
     @Override
     public GraphVO buildKnowledgeGraph(GraphReq req) {
@@ -54,8 +61,10 @@ public class GraphServiceImpl implements GraphService {
 
                 Set<String> patientIds = getAllDistinctPatientIds(sourceId);
                 String patientIdsStr = String.join(",", patientIds);
+                UploadRecord r = uploadRecordMapper.selectOne(new QueryWrapper<UploadRecord>().eq("source_id", sourceId));
+                String institution = r.getInstitution();
 
-                runScript(appConfig.getInterpreterPath(), appConfig.getNeo4jScriptPath(), patientIdsStr, tag);
+                runScript(appConfig.getInterpreterPath(), appConfig.getNeo4jScriptPath(), patientIdsStr, tag, institution);
                 BuildRecord record = new BuildRecord();
                 record.setSourceId(sourceId);
                 record.setGraphTag(tag);
@@ -82,13 +91,14 @@ public class GraphServiceImpl implements GraphService {
         return tagCounter.getAndIncrement();
     }
 
-    private void runScript(String executable, String scriptPath, String patientIds, int tag) {
+    private void runScript(String executable, String scriptPath, String patientIds, int tag, String institution) {
         // 组装参数
         String[] command = new String[]{
                 executable,
                 scriptPath,
                 patientIds,
                 String.valueOf(tag),
+                institution
         };
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);

@@ -7,7 +7,7 @@ from pathlib import Path
 # 连接到 Neo4j 数据库
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12345678"))
 
-def import_patient(pid, text_embed_path, image_embed_path, tag):
+def import_patient(pid, text_embed_path, image_embed_path, tag, institution):
     try:
         # 加载已对齐的文本嵌入向量
         text_vec = np.load(text_embed_path).astype(float).tolist()
@@ -24,19 +24,27 @@ def import_patient(pid, text_embed_path, image_embed_path, tag):
             MERGE (p:Patient {id: $pid, tag: $tag})
             """, pid=pid, tag=tag)
 
-            # 构建版本化 VisitText 节点
+            # 构建版本化 Text 节点
             s.run("""
             MERGE (vt:Text {uuid: $text_uuid, tag: $tag})
             SET vt.embedding = $text_vec
             MERGE (vt)-[:BELONGS_TO]->(p:Patient {id: $pid, tag: $tag})
             """, text_uuid=text_uuid, tag=tag, pid=pid, text_vec=text_vec)
 
-            # 构建版本化 VisitImage 节点
+            # 构建版本化 Image 节点
             s.run("""
             MERGE (vi:Image {uuid: $image_uuid, tag: $tag})
             SET vi.embedding = $image_vec
             MERGE (vi)-[:BELONGS_TO]->(p:Patient {id: $pid, tag: $tag})
             """, image_uuid=image_uuid, tag=tag, pid=pid, image_vec=image_vec)
+
+            # 构建版本化 Institution 节点
+            s.run("""
+            MERGE (ins:Institution {name: $name, tag: $tag})
+            SET ins.name = $name
+            MERGE (vi)-[:FROM]->(ins:Institution {name: $name, tag: $tag})
+            MERGE (vt)-[:FROM]->(ins:Institution {name: $name, tag: $tag})
+            """, name=institution, tag=tag)
 
             # 建立文本和图像的联系
             s.run("""
@@ -47,24 +55,25 @@ def import_patient(pid, text_embed_path, image_embed_path, tag):
     except Exception as e:
         print(f"Error importing patient {pid} with files {text_embed_path} and {image_embed_path}: {e}")
 
-def run_import(pid):
+def run_import(pid,institution):
     text_path = base_dir / f"{pid}_z_t.npy"
     image_path = base_dir / f"{pid}_z_i.npy"
     if text_path.exists() and image_path.exists():
-        import_patient(pid, text_path, image_path, tag)
+        import_patient(pid, text_path, image_path, tag, institution)
     else:
         print(f"Missing file(s) for {pid}")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python neo4j_import.py <patientIds> <tag> <mode>")
+    if len(sys.argv) != 5:
+        print("Usage: python neo4j_import.py <patientIds> <tag> <mode> <institution>")
         sys.exit(1)
 
     patient_ids = sys.argv[1].split(',')
     tag = int(sys.argv[2])
+    institution = sys.argv[4]
     base_dir = Path("data/align/reduce")
 
     for pid in patient_ids:
-        run_import(pid)
+        run_import(pid,institution)
 
 

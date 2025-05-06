@@ -57,16 +57,12 @@ public class GraphQueryUtil {
 
                         if ("Patient".equals(node.getType())) {
                             String patientId = node.getId();
-                            List<JointEmbeddingRelation> jointEmbeddingRelations = jointEmbeddingRelationMapper.selectList(
+                            JointEmbeddingRelation jointEmbeddingRelation = jointEmbeddingRelationMapper.selectOne(
                                     new QueryWrapper<JointEmbeddingRelation>().eq("patient_id", patientId));
-                            if (!jointEmbeddingRelations.isEmpty()) {
-                                List<GraphVO.Node.NodeDetail> nodeDetails = jointEmbeddingRelations.stream().map(ur -> {
+                            if (jointEmbeddingRelation != null) {
                                     GraphVO.Node.NodeDetail d = new GraphVO.Node.NodeDetail();
-                                    d.setTextFile(ur.getTextFile());
-                                    d.setImageFile(ur.getImageFile());
-                                    return d;
-                                }).collect(Collectors.toList());
-                                node.setNodeDetail(nodeDetails);
+                                    d.setTextFile(jointEmbeddingRelation.getTextFile());
+                                    d.setImageFile(jointEmbeddingRelation.getImageFile());
                             }
                         }
                         nodes.add(node);

@@ -1,4 +1,4 @@
-package DataAlignmentAndFusionApplication.model.enums;
+package DataAlignmentAndFusionApplication.common.enums;
 
 import lombok.Getter;
 
