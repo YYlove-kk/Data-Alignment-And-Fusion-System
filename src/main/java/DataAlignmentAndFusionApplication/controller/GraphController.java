@@ -1,5 +1,6 @@
 package DataAlignmentAndFusionApplication.controller;
 
+import DataAlignmentAndFusionApplication.model.dto.DeleteReq;
 import DataAlignmentAndFusionApplication.model.dto.GraphReq;
 import DataAlignmentAndFusionApplication.model.vo.GraphVO;
 import DataAlignmentAndFusionApplication.service.FusionRecordService;
@@ -43,5 +44,10 @@ public class GraphController {
     @GetMapping("/availableGraph")
     public List<Integer> getAvailableGraph() {
         return fusionRecordService.getAvailableGraph();
+    }
+
+    @PostMapping("/deleteEdge")
+    public Result<String> deleteEdge(DeleteReq req) {
+        return graphService.deleteEdge(req);
     }
 }

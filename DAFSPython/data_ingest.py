@@ -90,6 +90,8 @@ def main():
 
     args = parser.parse_args()
 
+
+
     clean_path = preprocess_table(args.file_path, args.registry_path, args.report_dir, args.clean_dir)
 
     print(clean_path)  # Java 侧从 stdout 读取

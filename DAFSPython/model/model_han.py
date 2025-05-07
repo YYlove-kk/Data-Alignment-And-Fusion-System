@@ -1,49 +1,50 @@
-import dgl
 import torch
 import torch.nn as nn
-import dgl.nn as dglnn
+import torch.nn.functional as F
 
-class SemanticAttention(nn.Module):
-    def __init__(self, in_size, hidden_size=128):
+class AttentionHAN(nn.Module):
+    def __init__(self, in_size=512, hidden_size=128, out_size=1, num_heads=4):
         super().__init__()
-        self.project = nn.Sequential(
-            nn.Linear(in_size, hidden_size),
-            nn.Tanh(),
-            nn.Linear(hidden_size, 1, bias=False)
-        )
+        self.num_heads = num_heads
+        self.head_dim = hidden_size // num_heads
 
-    def forward(self, z):
-        w = self.project(z).mean(0)
-        beta = torch.softmax(w, dim=0)
-        return (beta.unsqueeze(0) * z).sum(1)
+        assert hidden_size % num_heads == 0, "hidden_size must be divisible by num_heads"
 
-class HANLayer(nn.Module):
-    def __init__(self, in_size, out_size, num_heads, meta_paths):
-        super().__init__()
-        self.gat_layers = nn.ModuleList([
-            dglnn.GATConv(in_size, out_size, num_heads) for _ in meta_paths
+        # 映射输入向量到统一空间
+        self.text_proj = nn.Linear(in_size, hidden_size)
+        self.image_proj = nn.Linear(in_size, hidden_size)
+
+        # 多头注意力参数：每个头一个权重映射
+        self.attn_weights = nn.ModuleList([
+            nn.Linear(self.head_dim * 2, 1) for _ in range(num_heads)
         ])
-        self.semantic_attention = SemanticAttention(out_size * num_heads)
-        self.meta_paths = meta_paths
-        self.cached_graphs = {}
 
-    def forward(self, g, h):
-        if not self.cached_graphs:
-            for meta_path in self.meta_paths:
-                self.cached_graphs[tuple(meta_path)] = dgl.metapath_reachable_graph(g, meta_path)
-        out = []
-        for i, meta_path in enumerate(self.meta_paths):
-            new_g = self.cached_graphs[tuple(meta_path)]
-            out.append(self.gat_layers[i](new_g, h).flatten(1))
-        out = torch.stack(out, dim=1)
-        return self.semantic_attention(out)
+        # 融合 + 输出层
+        self.output_fc = nn.Linear(hidden_size * 3, out_size)
 
-class HAN(nn.Module):
-    def __init__(self, meta_paths, in_size=512, hidden_size=128, out_size=1, num_heads=8):
-        super().__init__()
-        self.han_layer = HANLayer(in_size, hidden_size, num_heads, meta_paths)
-        self.predict = nn.Linear(hidden_size, out_size)
+    def forward(self, text_vec, image_vec):
+        # Step 1: 输入映射并 reshape 为多头结构
+        t_feat = self.text_proj(text_vec)  # (B, hidden)
+        i_feat = self.image_proj(image_vec)
 
-    def forward(self, g, h_dict):
-        h = self.han_layer(g, h_dict['Visit'].float())
-        return {'Visit': self.predict(h)}
+        t_feat = t_feat.view(-1, self.num_heads, self.head_dim)  # (B, H, D)
+        i_feat = i_feat.view(-1, self.num_heads, self.head_dim)
+
+        # Step 2: 多头注意力融合
+        fused_heads = []
+        for i in range(self.num_heads):
+            t_i = t_feat[:, i, :]  # (B, D)
+            i_i = i_feat[:, i, :]
+            combined_i = torch.cat([t_i, i_i], dim=-1)  # (B, 2D)
+            attn_score = torch.sigmoid(self.attn_weights[i](combined_i))  # (B, 1)
+            fused = attn_score * t_i + (1 - attn_score) * i_i  # (B, D)
+            fused_heads.append(fused)
+
+        # Step 3: 融合所有头
+        fused = torch.cat(fused_heads, dim=-1)  # (B, hidden)
+
+        # Step 4: 拼接所有特征用于最终预测
+        combined = torch.cat([fused, self.text_proj(text_vec), self.image_proj(image_vec)], dim=-1)  # (B, hidden*3)
+        output = self.output_fc(combined)  # (B, 1)
+
+        return output

@@ -58,17 +58,55 @@ def run_import(pid,institution):
     else:
         print(f"Missing file(s) for {pid}")
 
+def build_similarity_edges(model_path: str, tag: int, threshold: float = 0.7):
+    import torch
+    from model.model_han import HAN
+
+    # 加载模型
+    model = HAN(in_size=512, hidden_size=128, out_size=1)
+    model.load_state_dict(torch.load(model_path, map_location="cpu"))
+    model.eval()
+
+    # 获取所有 Text 和 Image 节点的嵌入向量
+    with driver.session() as session:
+        text_nodes = session.run("MATCH (t:Text {tag: $tag}) RETURN t.uuid AS uuid, t.embedding AS embedding", tag=tag)
+        image_nodes = session.run("MATCH (i:Image {tag: $tag}) RETURN i.uuid AS uuid, i.embedding AS embedding", tag=tag)
+
+        texts = [(record["uuid"], record["embedding"]) for record in text_nodes]
+        images = [(record["uuid"], record["embedding"]) for record in image_nodes]
+
+        for text_uuid, text_vec in texts:
+            text_tensor = torch.tensor(text_vec, dtype=torch.float32).unsqueeze(0)
+            for image_uuid, image_vec in images:
+                image_tensor = torch.tensor(image_vec, dtype=torch.float32).unsqueeze(0)
+
+                with torch.no_grad():
+                    logit = model(text_tensor, image_tensor)
+                    prob = torch.sigmoid(logit).item()
+
+                if prob >= threshold:
+                    session.run("""
+                    MATCH (t:Text {uuid: $text_uuid, tag: $tag})
+                    MATCH (i:Image {uuid: $image_uuid, tag: $tag})
+                    MERGE (t)-[:MULTI_MODAL_SIMILAR {score: $score, tag: $tag}]->(i)
+                    """, text_uuid=text_uuid, image_uuid=image_uuid, tag=tag, score=prob)
+
+        print("Similarity edge creation complete.")
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print("Usage: python neo4j_import.py <patientIds> <tag> <mode> <institution>")
+        print("Usage: python multi_fusion.py <patientIds> <tag> <institution> <model>")
         sys.exit(1)
 
     patient_ids = sys.argv[1].split(',')
     tag = int(sys.argv[2])
-    institution = sys.argv[4]
+    institution = sys.argv[3]
+    model_path = sys.argv[4]
     base_dir = Path("data/align/reduce")
 
     for pid in patient_ids:
-        run_import(pid,institution)
+        run_import(pid, institution)
 
-
+    # 调用构建多模态相似边的方法
+    build_similarity_edges(model_path, tag)

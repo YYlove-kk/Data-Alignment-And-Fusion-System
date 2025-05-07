@@ -3,16 +3,18 @@ package DataAlignmentAndFusionApplication.service.impl;
 import DataAlignmentAndFusionApplication.config.AppConfig;
 import DataAlignmentAndFusionApplication.mapper.EmbedRecordMapper;
 import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
+import DataAlignmentAndFusionApplication.model.dto.DeleteReq;
 import DataAlignmentAndFusionApplication.model.dto.GraphReq;
 import DataAlignmentAndFusionApplication.model.entity.BuildRecord;
-import DataAlignmentAndFusionApplication.model.entity.GnnTrainingTask;
 import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.GraphVO;
 import DataAlignmentAndFusionApplication.service.BuildRecordService;
 import DataAlignmentAndFusionApplication.service.GraphService;
 import DataAlignmentAndFusionApplication.util.GraphQueryUtil;
 
+import DataAlignmentAndFusionApplication.util.Result;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import org.neo4j.driver.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -76,6 +78,34 @@ public class GraphServiceImpl implements GraphService {
             // 2. 从 Neo4j 查询知识图谱
         }
         return graphQueryUtil.queryGraphByTag(tag);
+    }
+
+    @Override
+    public Result<String> deleteEdge(DeleteReq req) {
+
+        try (Driver driver = GraphDatabase.driver("bolt://localhost:7687",
+                AuthTokens.basic("neo4j", "12345678"));
+             Session session = driver.session()) {
+            String cypher = String.format("""
+            MATCH (a)-[r:%s {tag: $tag}]->(b)
+            WHERE
+              (a:Text AND b:Image AND a.uuid = $uuid1 AND b.uuid = $uuid2)
+              OR
+              (a:Image AND b:Text AND a.uuid = $uuid1 AND b.uuid = $uuid2)
+            DELETE r
+            """, req.getEdgeType());
+
+            session.writeTransaction(tx -> tx.run(cypher,
+                    Values.parameters(
+                            "uuid1", req.getUuid1(),
+                            "uuid2", req.getUuid2(),
+                            "tag", req.getTag()
+                    )
+            ));
+            return Result.success("Edge deleted successfully.");
+        } catch (Exception e) {
+            return Result.error(500,"Failed to delete edge: " + e.getMessage());
+        }
     }
 
     public Set<String> getAllDistinctPatientIds(String sourceId) {

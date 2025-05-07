@@ -1,33 +1,33 @@
 package DataAlignmentAndFusionApplication.controller;
 
-import DataAlignmentAndFusionApplication.model.entity.GnnTrainingTask;
-import DataAlignmentAndFusionApplication.service.GnnTrainingService;
+
+
+import DataAlignmentAndFusionApplication.model.entity.TrainRecord;
+import DataAlignmentAndFusionApplication.service.TrainRecordService;
+import DataAlignmentAndFusionApplication.util.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/gnn")
 public class GnnTrainingController {
 
     @Autowired
-    private GnnTrainingService gnnTrainingService;
+    private TrainRecordService trainRecordService;
 
     @PostMapping("/train")
-    public ResponseEntity<Long> startTraining(@RequestParam String taskName) {
-        Long taskId = gnnTrainingService.startTraining(taskName);
-        return ResponseEntity.ok(taskId);
+    public Result<String> startTraining() {
+        return trainRecordService.startTraining();
     }
 
-    @GetMapping("/task/{id}")
-    public ResponseEntity<GnnTrainingTask> getTask(@PathVariable Long id) {
-        return ResponseEntity.ok(gnnTrainingService.getTaskById(id));
+    @GetMapping("/record")
+    public List<TrainRecord> getRecord() {
+        return trainRecordService.getAll();
     }
 
-    @GetMapping("/status")
-    public ResponseEntity<GnnTrainingTask> getStatus(@RequestParam String taskId) {
-        GnnTrainingTask task = gnnTrainingService.getTaskByTaskId(taskId);
-        return task != null ? ResponseEntity.ok(task) : ResponseEntity.notFound().build();
-    }
+
 
 }
