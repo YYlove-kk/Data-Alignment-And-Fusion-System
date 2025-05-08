@@ -1,5 +1,4 @@
 import sys
-
 from py2neo import Graph
 import networkx as nx
 import numpy as np

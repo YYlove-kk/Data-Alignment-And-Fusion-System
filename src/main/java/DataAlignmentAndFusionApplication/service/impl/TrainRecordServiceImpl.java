@@ -102,7 +102,6 @@ public class TrainRecordServiceImpl extends ServiceImpl<TrainRecordMapper, Train
                 record.setCreateTime(LocalDateTime.parse(row[7], formatter));
 
                 record.setStatus("SUCCESS"); // 可选，给定默认状态
-                record.setLog("来自CSV批量导入");
 
                 records.add(record);
             }

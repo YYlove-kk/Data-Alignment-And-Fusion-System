@@ -1,18 +1,36 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
 import DataAlignmentAndFusionApplication.config.AppConfig;
+import DataAlignmentAndFusionApplication.mapper.EmbedRecordMapper;
+import DataAlignmentAndFusionApplication.mapper.ReduceRecordMapper;
+import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
+import DataAlignmentAndFusionApplication.model.entity.EmbedRecord;
+import DataAlignmentAndFusionApplication.model.entity.ReduceRecord;
+import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.service.DimReduceService;
+import DataAlignmentAndFusionApplication.service.UserService;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
-public class DimReduceServiceImpl implements DimReduceService {
+public class DimReduceServiceImpl extends ServiceImpl<ReduceRecordMapper, ReduceRecord> implements DimReduceService {
 
     @Autowired
     private AppConfig appConfig;
+
+    @Autowired
+    private ReduceRecordMapper reduceRecordMapper;
+
+    @Autowired
+    private EmbedRecordMapper embedRecordMapper;
 
     @Override
     public void reduce() {
@@ -22,6 +40,32 @@ public class DimReduceServiceImpl implements DimReduceService {
             String scriptPath = appConfig.getKpcaReducePath();
             String inDir = appConfig.getAlignOutputPath();
             String outDir = appConfig.getAlignOutputPath() + "reduce/";
+
+            File dir = new File(inDir);
+            List<String> fileNames = new ArrayList<>();
+
+            if (dir.exists() && dir.isDirectory()) {
+                File[] files = dir.listFiles((d, name) -> name.toLowerCase().endsWith(".npy"));
+                if (files != null) {
+                    for (File file : files) {
+                        fileNames.add(file.getName());
+                    }
+                }
+            }
+
+            for (String fileName : fileNames) {
+                List<EmbedRecord> records = embedRecordMapper.selectList(
+                        new QueryWrapper<EmbedRecord>().eq("npy_name", fileName)
+                );
+                if (!records.isEmpty()) {
+                    String sourceId = records.get(0).getSourceId();
+                    ReduceRecord reduceRecord = new ReduceRecord();
+                    reduceRecord.setFilename(fileName);
+                    reduceRecord.setSourceid(sourceId);
+                    reduceRecord.setStatus("COMPLETED");
+                    reduceRecordMapper.insert(reduceRecord);
+                }
+            }
 
             String command = String.format("%s %s --input_dir %s --output_dir %s", interpreter, scriptPath, inDir, outDir);
 
@@ -40,5 +84,12 @@ public class DimReduceServiceImpl implements DimReduceService {
             throw new RuntimeException("Error occurred while executing the Python script: " + e.getMessage(), e);
         }
     }
+
+    @Override
+    public List<ReduceRecord> getRecords() {
+        return reduceRecordMapper.selectList(null);
+    }
+
+
 }
 

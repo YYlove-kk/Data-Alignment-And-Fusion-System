@@ -3,10 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 class AttentionHAN(nn.Module):
-    def __init__(self, in_size=512, hidden_size=128, out_size=1, num_heads=4):
+    def __init__(self, in_size=256, hidden_size=128, out_size=1, num_heads=4, threshold=0.6):
         super().__init__()
         self.num_heads = num_heads
         self.head_dim = hidden_size // num_heads
+        self.threshold = threshold
 
         assert hidden_size % num_heads == 0, "hidden_size must be divisible by num_heads"
 
@@ -30,14 +31,22 @@ class AttentionHAN(nn.Module):
         t_feat = t_feat.view(-1, self.num_heads, self.head_dim)  # (B, H, D)
         i_feat = i_feat.view(-1, self.num_heads, self.head_dim)
 
-        # Step 2: 多头注意力融合
+        # Step 2: 多头注意力权重计算与特征筛选
         fused_heads = []
         for i in range(self.num_heads):
             t_i = t_feat[:, i, :]  # (B, D)
             i_i = i_feat[:, i, :]
             combined_i = torch.cat([t_i, i_i], dim=-1)  # (B, 2D)
             attn_score = torch.sigmoid(self.attn_weights[i](combined_i))  # (B, 1)
-            fused = attn_score * t_i + (1 - attn_score) * i_i  # (B, D)
+
+            # 特征筛选
+            t_mask = attn_score > self.threshold
+            i_mask = attn_score > self.threshold
+
+            t_i_selected = t_i * t_mask.float()
+            i_i_selected = i_i * i_mask.float()
+
+            fused = attn_score * t_i_selected + (1 - attn_score) * i_i_selected  # (B, D)
             fused_heads.append(fused)
 
         # Step 3: 融合所有头
@@ -48,3 +57,4 @@ class AttentionHAN(nn.Module):
         output = self.output_fc(combined)  # (B, 1)
 
         return output
+
