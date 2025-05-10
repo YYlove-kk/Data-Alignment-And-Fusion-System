@@ -116,6 +116,28 @@ public class TrainRecordServiceImpl extends ServiceImpl<TrainRecordMapper, Train
         return trainRecordMapper.selectList(null); // 查询所有记录
     }
 
+    @Override
+    public List<String> getModelNames() {
+        List<String> modelNames = new ArrayList<>();
+        File directory = new File("DAFSPython/han");
+
+        // 确保目录存在且是目录
+        if (directory.exists() && directory.isDirectory()) {
+            // 获取该目录下的所有文件
+            File[] files = directory.listFiles();
+
+            if (files != null) {
+                // 遍历文件数组并将文件名添加到 list 中
+                for (File file : files) {
+                    if (file.isFile()) {
+                        modelNames.add(file.getName());
+                    }
+                }
+            }
+        }
+        return modelNames;
+    }
+
 }
 
 

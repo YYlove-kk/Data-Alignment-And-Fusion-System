@@ -21,7 +21,7 @@ public class ReduceRecord {
     /**
      * 
      */
-    private String sourceid;
+    private String sourceId;
 
     /**
      * 
@@ -32,4 +32,6 @@ public class ReduceRecord {
      * 
      */
     private String filename;
+
+    private String patientId;
 }

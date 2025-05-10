@@ -1,9 +1,13 @@
 package DataAlignmentAndFusionApplication.service.impl;
 
+import DataAlignmentAndFusionApplication.common.TagGenerator;
 import DataAlignmentAndFusionApplication.config.AppConfig;
+import DataAlignmentAndFusionApplication.mapper.UploadRecordMapper;
 import DataAlignmentAndFusionApplication.model.dto.GraphReq;
+import DataAlignmentAndFusionApplication.model.entity.UploadRecord;
 import DataAlignmentAndFusionApplication.model.vo.GraphVO;
 import DataAlignmentAndFusionApplication.util.GraphQueryUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import DataAlignmentAndFusionApplication.model.entity.FusionRecord;
 import DataAlignmentAndFusionApplication.service.FusionRecordService;
@@ -39,21 +43,33 @@ public class FusionRecordServiceImpl extends ServiceImpl<FusionRecordMapper, Fus
     @Autowired
     private GraphQueryUtil graphQueryUtil;
 
+    @Autowired
+    private TagGenerator tagGenerator;
+
+    @Autowired
+    private UploadRecordMapper uploadRecordMapper;
+
     @Override
-    public GraphVO fuseGraph(GraphReq req) {
+    public GraphVO fuseGraph(GraphReq req, String modeName) {
         List<String> sourceIds = req.getSourceIds();
         int graphTag = req.getGraphTag();
+        if (graphTag == -1) {
+            graphTag = tagGenerator.generateTag();
+        }
 
         for (String sourceId : sourceIds) {
 
-            if (checkFusionRecord(sourceId, graphTag)) {
-                System.out.println(sourceId + " 已经与知识图谱 " + graphTag + " 融合过，跳过融合操作。");
-                return null;
-            }
+//            if (checkFusionRecord(sourceId, graphTag)) {
+//                System.out.println(sourceId + " 已经与知识图谱 " + graphTag + " 融合过，跳过融合操作。");
+//                return null;
+//            }
+
+            UploadRecord r = uploadRecordMapper.selectOne(new QueryWrapper<UploadRecord>().eq("source_id", sourceId));
+            String institution = r.getInstitution();
             // 调用 Python 脚本进行融合操作
-            callPythonScript(sourceId, graphTag);
+            callPythonScript(sourceId, graphTag, institution,modeName);
             // 插入融合记录
-            insertFusionRecord(sourceId, graphTag);
+            insertFusionRecord(sourceId, graphTag, modeName);
         }
 
 
@@ -74,12 +90,12 @@ public class FusionRecordServiceImpl extends ServiceImpl<FusionRecordMapper, Fus
     /**
      * 调用 Python 脚本进行融合操作
      */
-    private void callPythonScript(String sourceId, int graphTag) {
+    private void callPythonScript(String sourceId, int graphTag, String institution, String modelName) {
         try {
-            String interpreter = appConfig.getInterpreterPath(); // 比如 "python3"
+            String interpreter = appConfig.getInterpreterPath();
             String scriptPath = appConfig.getFusionScriptPath();
             // 构建 Python 命令
-            ProcessBuilder pb = new ProcessBuilder(interpreter, scriptPath, sourceId, String.valueOf(graphTag));
+            ProcessBuilder pb = new ProcessBuilder(interpreter, scriptPath, sourceId, String.valueOf(graphTag), institution, modelName);
             // 启动进程
             Process process = pb.start();
 
@@ -105,10 +121,11 @@ public class FusionRecordServiceImpl extends ServiceImpl<FusionRecordMapper, Fus
     /**
      * 将 .npy 文件和知识图谱的融合记录插入到 MySQL 表中
      */
-    private void insertFusionRecord(String sourceId, int graphTag) {
+    private void insertFusionRecord(String sourceId, int graphTag, String modelName) {
         FusionRecord record = new FusionRecord();
         record.setSourceId(sourceId);
         record.setGraphTag(graphTag);
+        record.setModelName(modelName);
         fusionRecordMapper.insert(record);
     }
 

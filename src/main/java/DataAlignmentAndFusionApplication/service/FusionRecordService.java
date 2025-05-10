@@ -14,7 +14,7 @@ import java.util.List;
 */
 public interface FusionRecordService extends IService<FusionRecord> {
 
-    GraphVO fuseGraph(GraphReq req);
+    GraphVO fuseGraph(GraphReq req,String modeName);
 
     List<Integer> getAvailableGraph();
 }

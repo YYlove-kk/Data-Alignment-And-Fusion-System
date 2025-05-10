@@ -58,11 +58,13 @@ public class DimReduceServiceImpl extends ServiceImpl<ReduceRecordMapper, Reduce
                         new QueryWrapper<EmbedRecord>().eq("npy_name", fileName)
                 );
                 if (!records.isEmpty()) {
+                    String patientId = fileName.split("_")[0];
                     String sourceId = records.get(0).getSourceId();
                     ReduceRecord reduceRecord = new ReduceRecord();
                     reduceRecord.setFilename(fileName);
-                    reduceRecord.setSourceid(sourceId);
+                    reduceRecord.setSourceId(sourceId);
                     reduceRecord.setStatus("COMPLETED");
+                    reduceRecord.setPatientId(patientId);
                     reduceRecordMapper.insert(reduceRecord);
                 }
             }

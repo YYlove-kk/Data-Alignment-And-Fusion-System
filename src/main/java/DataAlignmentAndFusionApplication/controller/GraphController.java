@@ -37,8 +37,8 @@ public class GraphController {
     }
 
     @PostMapping("/fuse")
-    public GraphVO fuseKnowledgeGraph(GraphReq req) {
-        return fusionRecordService.fuseGraph(req);
+    public GraphVO fuseKnowledgeGraph(GraphReq req,String modeName) {
+        return fusionRecordService.fuseGraph(req,modeName);
     }
 
     @GetMapping("/availableGraph")

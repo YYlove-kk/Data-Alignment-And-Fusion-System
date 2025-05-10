@@ -15,4 +15,6 @@ public interface TrainRecordService extends IService<TrainRecord> {
     Result<String> startTraining();
 
     List<TrainRecord> getAll();
+
+    List<String> getModelNames();
 }

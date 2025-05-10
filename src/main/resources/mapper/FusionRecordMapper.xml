@@ -8,9 +8,10 @@
             <id property="id" column="id" />
             <result property="sourceId" column="source_id"/>
             <result property="graphTag" column="graph_tag" />
+            <result property="modelName" column="model_name" />
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,source_id,graph_tag
+        id,source_id,graph_tag,mode_name
     </sql>
 </mapper>

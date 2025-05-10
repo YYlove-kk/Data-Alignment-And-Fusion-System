@@ -28,6 +28,11 @@ public class GnnTrainingController {
         return trainRecordService.getAll();
     }
 
+    @GetMapping("/models")
+    public List<String> getModelNames() {
+        return trainRecordService.getModelNames();
+    }
+
 
 
 }

@@ -8,34 +8,9 @@ from neo4j import GraphDatabase
 # 连接到 Neo4j 数据库
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12345678"))
 
-# 获取所有 uuid → tag 的映射
-def get_node_tag_map(driver):
-    tag_map = {}
-    with driver.session() as session:
-        result = session.run("""
-        MATCH (n)
-        WHERE exists(n.uuid) AND exists(n.tag)
-        RETURN n.uuid AS uuid, n.tag AS tag
-        """)
-        for record in result:
-            tag_map[record["uuid"]] = record["tag"]
-    return tag_map
 
-# 基于余弦相似度的对齐函数
-def cosine_align(vectors):
-    num_vectors = len(vectors)
-    similarity_matrix = np.zeros((num_vectors, num_vectors))
-    for i in range(num_vectors):
-        for j in range(num_vectors):
-            similarity_matrix[i, j] = np.dot(vectors[i], vectors[j]) / (np.linalg.norm(vectors[i]) * np.linalg.norm(vectors[j]))
-    # 选择第一个向量作为参考向量
-    reference_vector = vectors[0]
-    aligned_vectors = []
-    for i in range(num_vectors):
-        # 找到最相似的参考向量（这里简化为第一个向量）
-        aligned_vector = vectors[i] * (np.dot(vectors[i], reference_vector) / np.linalg.norm(reference_vector) ** 2)
-        aligned_vectors.append(aligned_vector)
-    return aligned_vectors
+
+
 
 def build_hnsw_index(text_embed_paths, image_embed_paths, dim):
     p = hnswlib.Index(space='cosine', dim=dim * 2)  # 因为要拼接，维度翻倍
@@ -69,10 +44,21 @@ def create_similar_edges(p, index_to_uuid, driver, tag):
                         MATCH (vt:Text {uuid: $uuid1, tag: $tag}), (vi:Image {uuid: $uuid2, tag: $tag})
                         MERGE (vt)-[:MULTI_MODAL_SIMILAR {weight: $weight, tag: $tag}]->(vi)
                         """, uuid1=uuid1, uuid2=uuid2, weight=sim, tag=tag)
-                        s.run("""
-                        MATCH (vi:Image {uuid: $uuid1, tag: $tag}), (vt:Text {uuid: $uuid2, tag: $tag})
-                        MERGE (vi)-[:MULTI_MODAL_SIMILAR {weight: $weight, tag: $tag}]->(vt)
-                        """, uuid1=uuid1, uuid2=uuid2, weight=sim, tag=tag)
+
+                        # 基于余弦相似度的对齐函数
+def cosine_align(vectors):
+    num_vectors = len(vectors)
+    similarity_matrix = np.zeros((num_vectors, num_vectors))
+    for i in range(num_vectors):
+        for j in range(num_vectors):
+            similarity_matrix[i, j] = np.dot(vectors[i], vectors[j]) / (np.linalg.norm(vectors[i]) * np.linalg.norm(vectors[j]))
+    # 选择参考向量
+    reference_vector = np.mean(vectors, axis=0)
+    aligned_vectors = []
+    for i in range(num_vectors):
+        aligned_vector = vectors[i] * (np.dot(vectors[i], reference_vector) / np.linalg.norm(reference_vector) ** 2)
+        aligned_vectors.append(aligned_vector)
+    return aligned_vectors
 
 # 构建单模态相似边
 def create_single_modal_edges(p, index_to_uuid, driver, tag, is_text):
@@ -90,6 +76,36 @@ def create_single_modal_edges(p, index_to_uuid, driver, tag, is_text):
                         MATCH (a:{node_label} {{uuid: $uuid1, tag: $tag}}), (b:{node_label} {{uuid: $uuid2, tag: $tag}})
                         MERGE (a)-[:SINGLE_MODAL_SIMILAR {{weight: $weight, tag: $tag}}]->(b)
                         """, uuid1=uuid1, uuid2=uuid2, weight=sim, tag=tag)
+
+def single_edges(text_embed_paths, image_embed_paths, dim, driver, tag):
+    print("构建文本单模态边...")
+    # 文本单模态对齐
+    text_vectors = [np.load(path).astype(float) for path in text_embed_paths]
+    aligned_text_vectors = cosine_align(text_vectors)
+
+    p_text = hnswlib.Index(space='cosine', dim=dim)
+    p_text.init_index(max_elements=len(text_embed_paths), ef_construction=200, M=16)
+    text_index_map = {}
+    for i, vector in enumerate(aligned_text_vectors):
+        p_text.add_items(vector.reshape(1, -1))
+        uuid = text_embed_paths[i].split("/")[-1].split(".")[0]
+        text_index_map[i] = uuid
+    create_single_modal_edges(p_text, text_index_map, driver, tag, is_text=True)
+
+    print("构建图像单模态边...")
+    # 图像单模态对齐
+    image_vectors = [np.load(path).astype(float) for path in image_embed_paths]
+    aligned_image_vectors = cosine_align(image_vectors)
+
+    p_image = hnswlib.Index(space='cosine', dim=dim)
+    p_image.init_index(max_elements=len(image_embed_paths), ef_construction=200, M=16)
+    image_index_map = {}
+    for i, vector in enumerate(aligned_image_vectors):
+        p_image.add_items(vector.reshape(1, -1))
+        uuid = image_embed_paths[i].split("/")[-1].split(".")[0]
+        image_index_map[i] = uuid
+    create_single_modal_edges(p_image, image_index_map, driver, tag, is_text=False)
+
 
 
 def run_hnsw_builder(patient_ids, tag, dim, mode):
@@ -114,43 +130,19 @@ def run_hnsw_builder(patient_ids, tag, dim, mode):
         if mode == 0:
             print("执行跨模态图谱构建...")
             p, index_to_uuid = build_hnsw_index(text_embed_paths, image_embed_paths, dim)
+            single_edges(text_embed_paths, image_embed_paths, dim, driver, tag)
             create_similar_edges(p, index_to_uuid, driver, tag)
 
         elif mode == 1:
             print("执行单模态图谱构建...")
-
-            # 文本单模态对齐
-            text_vectors = [np.load(path).astype(float) for path in text_embed_paths]
-            aligned_text_vectors = cosine_align(text_vectors)
-            # 文本索引
-            p_text = hnswlib.Index(space='cosine', dim=dim)
-            p_text.init_index(max_elements=len(text_embed_paths), ef_construction=200, M=16)
-            text_index_map = {}
-            for i, vector in enumerate(aligned_text_vectors):
-                p_text.add_items(vector.reshape(1, -1))
-                uuid = text_embed_paths[i].split("/")[-1].split(".")[0]
-                text_index_map[i] = uuid
-            create_single_modal_edges(p_text, text_index_map, driver, tag, is_text=True)
-
-            # 图像单模态对齐
-            image_vectors = [np.load(path).astype(float) for path in image_embed_paths]
-            aligned_image_vectors = cosine_align(image_vectors)
-            # 图像索引
-            p_image = hnswlib.Index(space='cosine', dim=dim)
-            p_image.init_index(max_elements=len(image_embed_paths), ef_construction=200, M=16)
-            image_index_map = {}
-            for i, vector in enumerate(aligned_image_vectors):
-                p_image.add_items(vector.reshape(1, -1))
-                uuid = image_embed_paths[i].split("/")[-1].split(".")[0]
-                image_index_map[i] = uuid
-            create_single_modal_edges(p_image, image_index_map, driver, tag, is_text=False)
+            single_edges(text_embed_paths, image_embed_paths, dim, driver, tag)
 
     except Exception as e:
-        print(f"run_hnsw_builder 运行失败 ❌: {e}")
+        print(f"hnsw_builder 运行失败 ❌: {e}")
 
 def main():
     if len(sys.argv) != 4:
-        print("Usage: python hnsw_builder.py <patientId> <tag> <mode>")
+        print("Usage: python hnsw_builder.py <patientIdsStr> <tag> <mode>")
         sys.exit(1)
 
     patient_ids = sys.argv[1].split(',')

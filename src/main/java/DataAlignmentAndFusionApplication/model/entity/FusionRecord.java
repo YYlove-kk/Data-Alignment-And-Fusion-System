@@ -27,4 +27,6 @@ public class FusionRecord {
      * 
      */
     private Integer graphTag;
+
+    private String modelName;
 }

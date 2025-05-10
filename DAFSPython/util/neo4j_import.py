@@ -60,7 +60,7 @@ def run_import(pid,institution):
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print("Usage: python neo4j_import.py <patientIds> <tag> <mode> <institution>")
+        print("Usage: python neo4j_import.py <patientIdsStr> <tag> <mode> <institution>")
         sys.exit(1)
 
     patient_ids = sys.argv[1].split(',')
