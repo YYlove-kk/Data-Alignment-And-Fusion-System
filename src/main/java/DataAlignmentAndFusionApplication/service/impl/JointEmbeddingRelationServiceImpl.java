@@ -16,10 +16,7 @@ import java.util.List;
 @Service
 public class JointEmbeddingRelationServiceImpl extends ServiceImpl<JointEmbeddingRelationMapper, JointEmbeddingRelation>
     implements JointEmbeddingRelationService{
-    @Override
-    public void saveBatch(List<JointEmbeddingRelation> relations) {
-        this.saveBatch(relations);  // MyBatis-Plus 批量插入
-    }
+
 }
 
 

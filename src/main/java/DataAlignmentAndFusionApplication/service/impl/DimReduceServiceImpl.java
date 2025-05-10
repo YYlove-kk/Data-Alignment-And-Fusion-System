@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -90,6 +91,11 @@ public class DimReduceServiceImpl extends ServiceImpl<ReduceRecordMapper, Reduce
     @Override
     public List<ReduceRecord> getRecords() {
         return reduceRecordMapper.selectList(null);
+    }
+
+    @Override
+    public List<String> getSourceIds() {
+        return getRecords().stream().map(ReduceRecord::getSourceId).filter(Objects::nonNull).distinct().toList();
     }
 
 

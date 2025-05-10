@@ -11,5 +11,5 @@ public class GraphReq {
     private List<String> sourceIds;
     private int graphTag;
     @JsonProperty("mode")
-    private BuildMode mode = BuildMode.MULTI;
+    private int mode;
 }

@@ -1,9 +1,12 @@
 # train_tcmt.py
 import argparse
 import os
+from datetime import datetime
 
 import torch
 from torch.utils.data import DataLoader
+from tqdm import tqdm
+
 from model.model_tcmt import TCMT, clip_loss
 from util.alignment_utils import  PairDataset, match_by_date
 
@@ -21,6 +24,7 @@ def main():
     print(f"Using device: {device}")
 
     match_index = match_by_date(text_dir, image_dir)
+
     ds = PairDataset(match_index, text_dir, image_dir)
     dl = DataLoader(ds, batch_size=64, shuffle=True)
 

@@ -57,7 +57,7 @@ def calculate_hits_at_n(model, test_dataloader, device=None):
 
 # 创建存储模型记录的CSV文件路径
 def create_csv_path():
-    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    now = datetime.now().strftime("%Y-%m-%d")
     file_path = os.path.join("data/train", f"{now}.csv")
     return file_path
 

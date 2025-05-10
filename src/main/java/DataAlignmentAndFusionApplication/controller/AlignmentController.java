@@ -23,7 +23,7 @@ public class AlignmentController {
         } catch (Exception e) {
             e.printStackTrace();
             // 可以返回错误信息或其他处理
-            return null;
+            return Result.error(500, e.getMessage());
         }
     }
 
@@ -35,5 +35,10 @@ public class AlignmentController {
     @GetMapping("/listPatients")
     public List<String> listPatients() {
         return alignmentService.getPatients();
+    }
+
+    @PostMapping("/train")
+    public Result<String> startTraining() {
+        return null;
     }
 }

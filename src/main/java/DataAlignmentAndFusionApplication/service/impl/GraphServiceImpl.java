@@ -61,7 +61,7 @@ public class GraphServiceImpl implements GraphService {
 
         List<String> sourceIds = req.getSourceIds();
 
-        int mode = req.getMode().getCode();
+        int mode = req.getMode();
         // 生成唯一的 tag 值
         int tag = tagGenerator.generateTag();
 
@@ -116,6 +116,11 @@ public class GraphServiceImpl implements GraphService {
         } catch (Exception e) {
             return Result.error(500, "Failed to delete edge: " + e.getMessage());
         }
+    }
+
+    @Override
+    public GraphVO getGraph(int tag) {
+        return graphQueryUtil.queryGraphByTag(tag);
     }
 
 //    public Set<String> getAllDistinctPatientIds(String sourceId) {

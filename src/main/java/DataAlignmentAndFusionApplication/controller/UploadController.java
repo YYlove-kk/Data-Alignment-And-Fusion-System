@@ -15,7 +15,7 @@ public class UploadController {
 
     // 上传文件
     @PostMapping("/upload")
-    public Result<String> uploadFile(@ModelAttribute UploadReq req) {
+    public Result<String> uploadFile(@RequestBody UploadReq req) {
         // 调用上传服务
         return uploadRecordService.uploadFile(req);
     }
@@ -34,7 +34,7 @@ public class UploadController {
         return uploadRecordService.getUploadList(page, size);
     }
     // 删除上传记录
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/delete/{id}")
     public Result<Void> deleteUploadRecord(@PathVariable Long id) {
         return uploadRecordService.deleteRecord(id);
     }

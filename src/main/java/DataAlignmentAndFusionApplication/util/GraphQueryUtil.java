@@ -34,22 +34,23 @@ public class GraphQueryUtil {
     @Autowired
     private JointEmbeddingRelationMapper jointEmbeddingRelationMapper;
 
-    public GraphVO queryGraphByTag(int tag) {
+    public GraphVO queryGraphByTag(Integer tag) {
         List<GraphVO.Node> nodes = new ArrayList<>();
         Map<String, GraphVO.Edge> edgeMap = new HashMap<>();
 
         try (Driver driver = GraphDatabase.driver(uri, AuthTokens.basic(username, password));
              Session session = driver.session()) {
 
-            // 查询节点
-
+            // 构造动态 Cypher 查询（节点）
             String nodeCypher = """
-                    MATCH (n)
-                    WHERE n.tag = $tag
-                    RETURN id(n) AS id, labels(n)[0] AS type, coalesce(n.id, n.uuid, 'unknown') AS label
-                    """;
+                MATCH (n)
+                """ + (tag != null ? "WHERE n.tag = $tag\n" : "") + """
+                RETURN id(n) AS id, labels(n)[0] AS type, coalesce(n.id, n.uuid, 'unknown') AS label
+                """;
 
-            session.run(nodeCypher, Map.of("tag", tag))
+            Map<String, Object> params = tag != null ? Map.of("tag", tag) : Map.of();
+
+            session.run(nodeCypher, params)
                     .forEachRemaining(record -> {
                         GraphVO.Node node = new GraphVO.Node();
                         node.setId(String.valueOf(record.get("id").asInt()));
@@ -60,22 +61,23 @@ public class GraphQueryUtil {
                             JointEmbeddingRelation jointEmbeddingRelation = jointEmbeddingRelationMapper.selectOne(
                                     new QueryWrapper<JointEmbeddingRelation>().eq("patient_id", patientId));
                             if (jointEmbeddingRelation != null) {
-                                    GraphVO.Node.NodeDetail d = new GraphVO.Node.NodeDetail();
-                                    d.setTextFile(jointEmbeddingRelation.getTextFile());
-                                    d.setImageFile(jointEmbeddingRelation.getImageFile());
+                                GraphVO.Node.NodeDetail d = new GraphVO.Node.NodeDetail();
+                                d.setTextFile(jointEmbeddingRelation.getTextFile());
+                                d.setImageFile(jointEmbeddingRelation.getImageFile());
+                                node.setNodeDetail(d);
                             }
                         }
                         nodes.add(node);
                     });
 
-            // 查询关系
+            // 构造动态 Cypher 查询（关系）
             String edgeCypher = """
-                    MATCH (n)-[r]->(m)
-                    WHERE n.tag = $tag AND m.tag = $tag AND r.tag = $tag
-                    RETURN id(n) AS source, id(m) AS target, type(r) AS relation, r.weight AS weight
-                    """;
+                MATCH (n)-[r]->(m)
+                """ + (tag != null ? "WHERE n.tag = $tag AND m.tag = $tag AND r.tag = $tag\n" : "") + """
+                RETURN id(n) AS source, id(m) AS target, type(r) AS relation, r.weight AS weight
+                """;
 
-            session.run(edgeCypher, Map.of("tag", tag))
+            session.run(edgeCypher, params)
                     .forEachRemaining(record -> {
                         String source = String.valueOf(record.get("source").asInt());
                         String target = String.valueOf(record.get("target").asInt());
@@ -103,8 +105,9 @@ public class GraphQueryUtil {
 
         GraphVO graphVO = new GraphVO();
         graphVO.setNodes(nodes);
-        graphVO.setEdges(new ArrayList<>(edgeMap.values()));  // 转换为 List
+        graphVO.setEdges(new ArrayList<>(edgeMap.values()));
         return graphVO;
     }
+
 
 }

@@ -1,6 +1,8 @@
 import os
 import glob
 import json
+
+import pandas as pd
 import torch
 import numpy as np
 import argparse
@@ -59,6 +61,21 @@ def main():
     model.eval()
 
     matches = match_text_image(text_dir, image_dir)
+
+    index = []
+
+    for text_file, image_file in matches:
+        patient_id = extract_patient_id_from_filename(image_file)
+        index.append({
+            "patient_id": patient_id,
+            "text_file": text_file,
+            "image_file": image_file
+        })
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    match_index_file = os.path.join("data/align/matchCSV", f"match_index_{timestamp}.csv")
+    pd.DataFrame(index).to_csv(match_index_file, index=False)
+    print(f"CSV_PATH {match_index_file}")
 
     z_t_all, z_i_all, patient_ids = [], [], []
 

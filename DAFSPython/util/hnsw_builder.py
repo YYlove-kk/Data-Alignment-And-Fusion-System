@@ -8,10 +8,6 @@ from neo4j import GraphDatabase
 # 连接到 Neo4j 数据库
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12345678"))
 
-
-
-
-
 def build_hnsw_index(text_embed_paths, image_embed_paths, dim):
     p = hnswlib.Index(space='cosine', dim=dim * 2)  # 因为要拼接，维度翻倍
     p.init_index(max_elements=len(text_embed_paths), ef_construction=200, M=16)
@@ -45,7 +41,7 @@ def create_similar_edges(p, index_to_uuid, driver, tag):
                         MERGE (vt)-[:MULTI_MODAL_SIMILAR {weight: $weight, tag: $tag}]->(vi)
                         """, uuid1=uuid1, uuid2=uuid2, weight=sim, tag=tag)
 
-                        # 基于余弦相似度的对齐函数
+# 基于余弦相似度的对齐函数
 def cosine_align(vectors):
     num_vectors = len(vectors)
     similarity_matrix = np.zeros((num_vectors, num_vectors))

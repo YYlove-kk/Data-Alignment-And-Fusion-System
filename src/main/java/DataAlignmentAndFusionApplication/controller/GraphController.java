@@ -5,7 +5,6 @@ import DataAlignmentAndFusionApplication.model.dto.GraphReq;
 import DataAlignmentAndFusionApplication.model.vo.GraphVO;
 import DataAlignmentAndFusionApplication.service.FusionRecordService;
 import DataAlignmentAndFusionApplication.service.GraphService;
-import DataAlignmentAndFusionApplication.service.KpcaService;
 import DataAlignmentAndFusionApplication.util.Result;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -23,22 +22,15 @@ public class GraphController {
     @Autowired
     private FusionRecordService fusionRecordService;
 
-    @Autowired
-    private KpcaService kpcaService;
 
-    @PostMapping("/reduce")
-    public Result<String> reduceVectors(GraphReq req) {
-        return kpcaService.runKpcaReduction(req);
-    }
-
-    @GetMapping("/build")
-    public GraphVO buildKnowledgeGraph(GraphReq req) {
+    @PostMapping("/build")
+    public GraphVO buildKnowledgeGraph(@RequestBody GraphReq req) {
         return graphService.buildKnowledgeGraph(req);
     }
 
     @PostMapping("/fuse")
-    public GraphVO fuseKnowledgeGraph(GraphReq req,String modeName) {
-        return fusionRecordService.fuseGraph(req,modeName);
+    public GraphVO fuseKnowledgeGraph(@RequestBody GraphReq req,@RequestParam  String modeName) {
+        return fusionRecordService.fuseGraph(req, modeName);
     }
 
     @GetMapping("/availableGraph")
@@ -47,7 +39,12 @@ public class GraphController {
     }
 
     @PostMapping("/deleteEdge")
-    public Result<String> deleteEdge(DeleteReq req) {
+    public Result<String> deleteEdge(@RequestBody DeleteReq req) {
         return graphService.deleteEdge(req);
+    }
+
+    @GetMapping("/home")
+    public GraphVO queryGraph(@RequestParam(value = "tag", required = false) Integer tag) {
+        return graphService.getGraph(tag);
     }
 }

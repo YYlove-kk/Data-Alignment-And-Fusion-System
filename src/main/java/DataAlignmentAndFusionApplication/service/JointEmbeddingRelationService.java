@@ -11,6 +11,6 @@ import java.util.List;
 * @createDate 2025-05-03 23:52:39
 */
 public interface JointEmbeddingRelationService extends IService<JointEmbeddingRelation> {
-    void saveBatch(List<JointEmbeddingRelation> relations);
+
 
 }

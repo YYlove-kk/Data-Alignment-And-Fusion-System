@@ -13,7 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/dimReduce")
-public class DimReduceController {
+public class ReduceController {
 
     @Autowired
     private DimReduceService dimReduceService;
@@ -32,5 +32,10 @@ public class DimReduceController {
     @GetMapping("/records")
     public List<ReduceRecord> records() {
         return dimReduceService.getRecords();
+    }
+
+    @GetMapping("/sourceIds" )
+    public List<String> getSourceIds() {
+        return dimReduceService.getSourceIds();
     }
 }

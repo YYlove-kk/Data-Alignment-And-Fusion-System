@@ -6,14 +6,13 @@ import DataAlignmentAndFusionApplication.model.entity.TrainRecord;
 import DataAlignmentAndFusionApplication.service.TrainRecordService;
 import DataAlignmentAndFusionApplication.util.Result;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/gnn")
-public class GnnTrainingController {
+public class GnnTrainController {
 
     @Autowired
     private TrainRecordService trainRecordService;
@@ -32,7 +31,5 @@ public class GnnTrainingController {
     public List<String> getModelNames() {
         return trainRecordService.getModelNames();
     }
-
-
 
 }
