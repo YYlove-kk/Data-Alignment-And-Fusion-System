@@ -28,15 +28,18 @@ def preprocess_table(file_path: str, registry_path: str, report_dir: str, clean_
     # 1) 读取文件
     df_raw = pd.read_excel(file_path) if file_path.endswith(".xlsx") \
         else pd.read_csv(file_path)
+    # 打印原始数据的列名
+    print("原始数据列名:", df_raw.columns)  # 打印原始数据列名
 
     # 2) 字段映射
     df_raw.columns = map_columns(df_raw.columns, registry_path)
-
+    # 打印映射后的列名
+    print("映射后数据列名:", df_raw.columns)  # 打印映射后列名
     # 检查缺失列并添加
     required_columns = ["patient_id", "age", "gender","visit_time","name","admission_time", "discharge_time","chief_complaint","history","disease_name"]  # 列出必需的列
     for col in required_columns:
         if col not in df_raw.columns:
-            df_raw[col] = "未知"  # 或者给列填充默认值，比如 'Unknown' 或 0
+            df_raw[col] = 'Unknown'
 
     # 3) great‑expectations 校验
     # 创建上下文
@@ -54,9 +57,11 @@ def preprocess_table(file_path: str, registry_path: str, report_dir: str, clean_
     # 创建 Validator
     ge_df = Validator(execution_engine=execution_engine, batches=[batch])
     if "age" in df_raw.columns:
+        df_raw["age"] = pd.to_numeric(df_raw["age"], errors='coerce')
         ge_df.expect_column_values_to_be_between("age", min_value=0, max_value=120)
-    if "gender" in df_raw.columns:
-        ge_df.expect_column_values_to_be_in_set(["性别", "GENDER_NAME"], ["男", "女", "男性", "女性"])
+    for gender_col in ["gender", "性别", "GENDER_NAME"]:
+        if gender_col in df_raw.columns:
+            ge_df.expect_column_values_to_be_in_set(gender_col, ["男", "女", "男性", "女性"])
     validation = ge_df.validate()
 
     os.makedirs(report_dir, exist_ok=True)
@@ -82,17 +87,22 @@ def preprocess_table(file_path: str, registry_path: str, report_dir: str, clean_
 
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--file_path", required=True, help="输入原始 Excel 或 CSV 文件路径")
-    parser.add_argument("--registry_path", required=True, help="字段映射规则 schema_registry.json")
-    parser.add_argument("--report_dir", default="./report", help="验证报告输出路径")
-    parser.add_argument("--clean_dir", default="./clean", help="清洗结果输出路径")
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--file_path", required=True, help="输入原始 Excel 或 CSV 文件路径")
+    # parser.add_argument("--registry_path", required=True, help="字段映射规则 schema_registry.json")
+    # parser.add_argument("--report_dir", default="./report", help="验证报告输出路径")
+    # parser.add_argument("--clean_dir", default="./clean", help="清洗结果输出路径")
+    #
+    # args = parser.parse_args()
+    #
+    # clean_path = preprocess_table(args.file_path, args.registry_path, args.report_dir, args.clean_dir)
 
-    args = parser.parse_args()
+    file_path = "../data/upload/source/test例.xlsx"
+    registry_path = "../schema_registry.json"
+    report_dir = "../data/upload/report"
+    clean_dir = "../data/upload/clean"
 
-
-
-    clean_path = preprocess_table(args.file_path, args.registry_path, args.report_dir, args.clean_dir)
+    clean_path = preprocess_table(file_path, registry_path, report_dir, clean_dir)
 
     print(clean_path)  # Java 侧从 stdout 读取
 

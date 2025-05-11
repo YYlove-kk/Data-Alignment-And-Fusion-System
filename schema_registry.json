@@ -11,7 +11,7 @@
   "建档日期": "admission_time",
   "REPORT_DATE": "admission_time",
   "异常": "chief_complaint",
-  "IMAGING_FINDING": "chief_complaint",
+  "IMAGING_CONCLUSION": "chief_complaint",
   "既往病史中其他疾病": "history",
   "DISEASE_NAME": "disease_name",
   "出院时间": "discharge_time",

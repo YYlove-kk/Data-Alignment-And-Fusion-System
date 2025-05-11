@@ -65,8 +65,8 @@ public class UploadMessageListener {
             if (modalityType.equals("IMAGE")) {
                 scriptPath = appConfig.getImageEmbedPath(); // 针对 DICOM 图像
                 String outputPath = runPythonScript(interpreter, scriptPath,
-                        "--source_folder", message.getRawDir(),
-                        "--output_dir", "data/align/output/image");
+                        "--source_folder", "../" + message.getRawDir(),
+                        "--output_dir", "../data/align/output/image");
 
                 if (outputPath != null) {
                     ObjectMapper mapper = new ObjectMapper();
@@ -84,10 +84,10 @@ public class UploadMessageListener {
                 // 先清洗
                 String ingestPath = appConfig.getDataIngestPath();
                 String cleanPath = runPythonScript(interpreter, ingestPath,
-                        "--file_path", message.getRawDir() + fileName,
-                        "--clean_dir", message.getCleanDir(),
-                        "--registry_path", message.getSchemaRegistryPath(),
-                        "--report_dir", message.getReportDir());
+                        "--file_path", "../" + message.getRawDir() + fileName,
+                        "--clean_dir", "../" + message.getCleanDir(),
+                        "--registry_path", "../" + message.getSchemaRegistryPath(),
+                        "--report_dir", "../" + message.getReportDir());
 
                 if (cleanPath == null) {
                     log.error("Python清洗失败: 文件={}", message.getRawDir());
@@ -99,8 +99,8 @@ public class UploadMessageListener {
                 scriptPath = appConfig.getTextTimeEmbedPath();
 
                 String outputPath = runPythonScript(interpreter, scriptPath,
-                        "--file_path", message.getCleanPath(),
-                        "--output_dir", "data/align/output/text");
+                        "--file_path", "../" + message.getCleanPath(),
+                        "--output_dir", "../data/align/output/text");
 
                 if (outputPath != null) {
                     ObjectMapper mapper = new ObjectMapper();

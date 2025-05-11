@@ -61,21 +61,21 @@ def convert_to_rgb(image):
     return cv2.cvtColor(image, cv2.COLOR_GRAY2RGB)
 
 
-def build_resnet_model():
+def build_resnet_model(device):
     resnet = models.resnet50(weights=models.ResNet50_Weights.DEFAULT)
     modules = list(resnet.children())[:-1]
     model = nn.Sequential(*modules)
     model.eval()
-    return model
+    return model.to(device)  # 加这一行
 
 
-def extract_features(image, model):
+def extract_features(image, model, device):
     preprocess = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
     ])
-    input_tensor = preprocess(image).unsqueeze(0)
+    input_tensor = preprocess(image).unsqueeze(0).to(device)
     with torch.no_grad():
         features = model(input_tensor)
     return features.squeeze().cpu()
@@ -95,7 +95,7 @@ def process_source_images(source_folder, model, time_encoder):
             image = resize_image(image)
             image = convert_to_rgb(image)
             image = image.astype(np.float32)
-            feature_vector = extract_features(image, model)
+            feature_vector = extract_features(image, model, device)
             combined = torch.cat((feature_vector, time_vector.squeeze(0)), dim=0)
             feature_vectors.append(combined)
         except Exception as e:
@@ -104,27 +104,33 @@ def process_source_images(source_folder, model, time_encoder):
     return torch.stack(feature_vectors) if feature_vectors else None
 
 
-def save_source_embedding(features, output_dir,patient_name, patient_folder):
+def save_source_embedding(features, output_dir, patient_name, patient_folder):
     acquisition_date = extract_acquisition_date(patient_folder)
     timestamp = acquisition_date
     os.makedirs(output_dir, exist_ok=True)
     filename = f"{patient_name}_{timestamp}_img.npy"
     path = os.path.join(output_dir, filename)
-    np.save(path, features.detach().numpy())
+    np.save(path, features.detach().numpy())  # Save the feature array as npy file
     return filename
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Process DICOM images and extract features.")
-    parser.add_argument("--source_folder", required=True, help="Path to the raw DICOM folder")
-    parser.add_argument("--output_dir", required=True, help="Path to save the feature embeddings")
 
-    args = parser.parse_args()
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"🚀 Using device: {device}", file=sys.stderr)
 
-    source_folder = args.source_folder
-    output_dir = args.output_dir
-    source_id = os.path.basename(source_folder.rstrip("/"))
+    # parser = argparse.ArgumentParser(description="Process DICOM images and extract features.")
+    # parser.add_argument("--source_folder", required=True, help="Path to the raw DICOM folder")
+    # parser.add_argument("--output_dir", required=True, help="Path to save the feature embeddings")
+    #
+    # args = parser.parse_args()
+    #
+    # source_folder = args.source_folder
+    # output_dir = args.output_dir
 
-    model = build_resnet_model()
+    source_folder = "../data/upload/source/test image"
+    output_dir = "../data/align/raw/image"
+    model = build_resnet_model(device)
     time_encoder = Time2Vec(32)
 
     result_paths = []
@@ -137,7 +143,7 @@ if __name__ == "__main__":
         print(f"🔍 Processing patient: {patient_name}", file=sys.stderr)
         features = process_source_images(patient_path, model, time_encoder)
         if features is not None:
-            save_path = save_source_embedding(features, output_dir,patient_name, patient_path)
+            save_path = save_source_embedding(features, output_dir, patient_name, patient_path)
             result_paths.append(save_path)
             print(f"✅ Saved for {patient_name} -> {save_path}", file=sys.stderr)
 
