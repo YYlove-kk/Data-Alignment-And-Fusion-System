@@ -67,10 +67,11 @@ def build_similarity_edges(model_path: str, tag: int, threshold: float = 0.7):
     from model.model_han import AttentionHAN
 
     # 加载模型
-    model = AttentionHAN(in_size=256, hidden_size=128, out_size=1)
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    model_path = 'han/han_epoch180.pt'
+    model = AttentionHAN(in_size=256, hidden_size=128, out_size=1, num_heads=4, threshold=0.6)
+    model.load_state_dict(torch.load(model_path))
     model.to(device)
-    model.eval()
+    model.eval()  # 设置为评估模式
 
     # 获取所有 Text 和 Image 节点的嵌入向量
     with driver.session() as session:

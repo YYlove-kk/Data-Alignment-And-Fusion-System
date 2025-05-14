@@ -12,25 +12,32 @@ class EmbeddingDataset(Dataset):
         self.pair_list = self._load_data(test_size)
 
     def _load_data(self, test_size):
+        txt_dir = os.path.join(self.base_dir, 'txt')
+        img_dir = os.path.join(self.base_dir, 'img')
+
+        if not os.path.exists(txt_dir) or not os.path.exists(img_dir):
+            raise FileNotFoundError(f"Cannot find txt or img subdirectory in {self.base_dir}")
+
+        txt_files = [f for f in os.listdir(txt_dir) if f.endswith('_z_t.npy')]
+        img_files = set(os.listdir(img_dir))
+
         pair_list = []
-        # 遍历文件夹中的所有 .npy 文件
-        for filename in os.listdir(self.base_dir):
-            if filename.endswith("_z_t.npy"):
-                patient_id = filename.split("_")[0]  # 提取 patientId
-                text_file = os.path.join(self.base_dir, f"{patient_id}_z_t.npy")
-                image_file = os.path.join(self.base_dir, f"{patient_id}_z_i.npy")
+        for txt_file in txt_files:
+            patient_id = txt_file.replace('_z_t.npy', '')
+            img_file = f"{patient_id}_z_i.npy"
+            if img_file in img_files:
+                txt_path = os.path.join(txt_dir, txt_file)
+                img_path = os.path.join(img_dir, img_file)
+                pair_list.append((txt_path, img_path))
 
-                # 检查是否存在对应的图像和文本文件
-                if os.path.exists(image_file):
-                    pair_list.append((text_file, image_file))
+        if not pair_list:
+            raise ValueError(f"No matched vector pairs found in {self.base_dir}/txt and /img.")
 
-        # 划分数据集
         train_pairs, test_pairs = train_test_split(pair_list, test_size=test_size, random_state=42)
 
-        # 根据当前 split 设置数据集
         if self.split == 'train':
             return train_pairs
-        elif self.split == 'test':
+        else:
             return test_pairs
 
     def __len__(self):
@@ -41,20 +48,25 @@ class EmbeddingDataset(Dataset):
         text_vec = np.load(text_file)
         image_vec = np.load(image_file)
 
+        if text_vec.ndim == 2:
+            text_vec = text_vec.squeeze(0)
+        if image_vec.ndim == 2:
+            image_vec = image_vec.squeeze(0)
+
         # 随机决定是否构造负样本
-        if np.random.rand() < 0.5:
-            label = 1  # 正样本
+        if np.random.rand() < 0.8:
+            label = 1
         else:
-            # 构造负样本：从其他 image 中随机选一个
             neg_idx = (idx + np.random.randint(1, len(self.pair_list))) % len(self.pair_list)
             _, neg_image_file = self.pair_list[neg_idx]
             image_vec = np.load(neg_image_file)
+            if image_vec.ndim == 2:
+                image_vec = image_vec.squeeze(0)
             label = 0
 
-        # 转换为 PyTorch tensor 并移动到指定设备
+        # 转成 Tensor
         text_vec = torch.tensor(text_vec, dtype=torch.float32).to(self.device)
         image_vec = torch.tensor(image_vec, dtype=torch.float32).to(self.device)
         label = torch.tensor([label], dtype=torch.float32).to(self.device)
-
 
         return text_vec, image_vec, label

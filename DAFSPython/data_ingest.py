@@ -97,7 +97,7 @@ def main():
     #
     # clean_path = preprocess_table(args.file_path, args.registry_path, args.report_dir, args.clean_dir)
 
-    file_path = "../data/upload/source/test例.xlsx"
+    file_path = "../data/upload/source/test text/test.xlsx"
     registry_path = "../schema_registry.json"
     report_dir = "../data/upload/report"
     clean_dir = "../data/upload/clean"

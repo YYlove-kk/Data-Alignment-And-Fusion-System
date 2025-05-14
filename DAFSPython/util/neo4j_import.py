@@ -66,7 +66,7 @@ if __name__ == "__main__":
     patient_ids = sys.argv[1].split(',')
     tag = int(sys.argv[2])
     institution = sys.argv[4]
-    base_dir = Path("data/align/reduce")
+    base_dir = Path("../data/align/reduce")
 
     for pid in patient_ids:
         run_import(pid,institution)

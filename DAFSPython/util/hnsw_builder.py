@@ -110,8 +110,8 @@ def run_hnsw_builder(patient_ids, tag, dim, mode):
         image_embed_paths = []
 
         for patient_id in patient_ids:
-            text_path = f"data/align/reduce/{patient_id}_z_t.npy"
-            image_path = f"data/align/reduce/{patient_id}_z_i.npy"
+            text_path = f"../data/align/reduce/{patient_id}_z_t.npy"
+            image_path = f"../data/align/reduce/{patient_id}_z_i.npy"
 
             if os.path.exists(text_path):
                 text_embed_paths.append(text_path)

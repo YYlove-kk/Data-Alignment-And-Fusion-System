@@ -49,6 +49,10 @@ def get_bert_embeddings(texts, tokenizer, model, device='cpu', batch_size=32, ma
             outputs = model(**inputs)
             cls_embeds = outputs.last_hidden_state[:, 0, :]  # 取 [CLS]
 
+        # 检查是否有 NaN
+        if np.any(np.isnan(cls_embeds.cpu().numpy())):
+            print(f"[WARN] 检测到 NaN 在文本嵌入的第 {i} 批次中")
+
         embeddings.append(cls_embeds.cpu().numpy())
 
     return np.vstack(embeddings)
@@ -62,57 +66,84 @@ def embed_dataframe(pq_file: str, out_dir: str, id: str) -> list:
 
     # 合并重复的 name 和 visit_time
     df_grouped = df.groupby(['name', 'visit_time'], as_index=False).agg({
-        'gender': 'first',  # 假设每个患者的性别是相同的
-        'age': 'first',          # 假设年龄不变
+        'gender': 'first',
+        'age': 'first',
         'VISIT_DEPT_NAME': 'first',
         'DISCHARGE_DEPT_NAME': 'first',
-        'discharge_time': 'first',  # 使用 discharge_time 代替 DISCHARGE_DATE
-        'VISIT_ORD_NO': 'first',  # 假设每次就诊编号唯一
+        'discharge_time': 'first',
+        'VISIT_ORD_NO': 'first',
         'INPATIENT_ORD_NO': 'first',
-        'IMAGING_FINDING': ' '.join,  # 将影像发现拼接
-        '项目名': ' '.join,  # 将项目名拼接
-        'chief_complaint': ' '.join,  # 主诉拼接
-        'history': ' '.join,  # 病史拼接
-        'disease_name': ' '.join,  # 诊断拼接
+        'IMAGING_FINDING': ' '.join,
+        '项目名': ' '.join,
+        'chief_complaint': ' '.join,
+        'history': ' '.join,
+        'disease_name': ' '.join,
     })
-
-
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
     tokenizer = BertTokenizer.from_pretrained('hfl/chinese-roberta-wwm-ext')
     bert = BertModel.from_pretrained('hfl/chinese-roberta-wwm-ext').to(device)
-
     time2vec = Time2Vec(dim=32)
 
-    prompts = df_grouped.apply(line_to_prompt, axis=1).tolist()
-    text_embeds = get_bert_embeddings(prompts, tokenizer, bert, device=device)
+    # ---------- 保留合法行 ----------
+    valid_rows = []
+    valid_prompts = []
+    valid_times = []
 
-    time_embeds = []
-    for date_str in tqdm(df_grouped["visit_time"], desc="Time Embedding..."):
-        ts = safe_to_datetime(date_str)  # 使用 safe_to_datetime 进行转换
-        if pd.isna(ts):  # 如果时间转换失败，则跳过
+    for i, row in df_grouped.iterrows():
+        ts = safe_to_datetime(row["visit_time"])
+        if pd.isna(ts):
+            print(f"[WARN] 跳过无效 visit_time 行 index={i}")
             continue
-        vec = time2vec(ts).detach().numpy()
-        time_embeds.append(vec)
-    if not time_embeds:
-        raise ValueError("没有有效的时间嵌入数据，无法进行堆叠")
-    time_embeds = np.stack(time_embeds)
+        prompt = line_to_prompt(row)
+        valid_rows.append((i, row))
+        valid_prompts.append(prompt)
+        valid_times.append(ts)
 
+    if not valid_rows:
+        raise ValueError("未找到任何合法的行，无法生成嵌入")
+
+    # ---------- 嵌入生成 ----------
+    print(f"有效样本数：{len(valid_prompts)}")
+    text_embeds = get_bert_embeddings(valid_prompts, tokenizer, bert, device=device)
+
+    # 检查 text_embeds 是否有 NaN
+    if np.any(np.isnan(text_embeds)):
+        print("[ERROR] 检测到 text_embeds 中有 NaN")
+
+    time_embeds = np.vstack([time2vec(ts).detach().numpy() for ts in valid_times])
+
+    # 检查 time_embeds 是否有 NaN
+    if np.any(np.isnan(time_embeds)):
+        print("[ERROR] 检测到 time_embeds 中有 NaN")
 
     final_embeds = np.concatenate([text_embeds, time_embeds], axis=1)
 
+    # ---------- NAN 检查 ----------
+    nan_rows = np.any(np.isnan(final_embeds), axis=1)
+    if np.any(nan_rows):
+        print(f"[ERROR] 检测到 {np.sum(nan_rows)} 行包含 NaN，对应索引如下：")
+        print(np.where(nan_rows)[0])
+
+    # ---------- 保存 ----------
     os.makedirs(out_dir, exist_ok=True)
     saved_paths = []
 
-    for i, row in df_grouped.iterrows():
+    for idx, (original_i, row) in enumerate(valid_rows):
+        if np.any(np.isnan(final_embeds[idx])) or np.all(final_embeds[idx] == 0):
+            print(f"[SKIP] 跳过无效嵌入：{id}_{idx}")
+            continue
+
         visit_time = safe_to_datetime(row["visit_time"]).strftime("%Y%m%d") if not pd.isna(row["visit_time"]) else "unknown_time"
-        filename = f"{id}_{visit_time}_{i}_txt.npy"
+        filename = f"{id}_{visit_time}_{idx}_txt.npy"
         output_path = os.path.join(out_dir, filename)
-        np.save(output_path, final_embeds[i])
+        np.save(output_path, final_embeds[idx])
         saved_paths.append(filename)
 
+    print(f"[DONE] 成功保存 {len(saved_paths)} 个嵌入向量")
     return saved_paths
+
 
 def main():
 
@@ -124,7 +155,7 @@ def main():
     # txt_id = os.path.splitext(os.path.basename(args.file_path))[0]
     # paths = embed_dataframe(args.file_path, args.output_dir, txt_id)
 
-    file_path = "../data/upload/clean/test例.parquet"
+    file_path = "../data/upload/clean/test.parquet"
     output_dir = "../data/align/raw/text"
 
     txt_id = os.path.splitext(os.path.basename(file_path))[0]
