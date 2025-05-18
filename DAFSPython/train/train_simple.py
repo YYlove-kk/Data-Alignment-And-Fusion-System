@@ -6,9 +6,8 @@ import torch.optim as optim
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from util.npy_loader import EmbeddingDataset
-from model.model_han import AttentionHAN
+from model.simple_han import  SimpleHAN
 
-from sklearn.metrics import roc_auc_score, f1_score
 # 设置数据集和数据加载器
 base_dir = "../../data/align/match"
 print("Listing files in base_dir:", base_dir)
@@ -19,12 +18,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 train_dataset = EmbeddingDataset(base_dir, split='train', test_size=0.2, device=device)
 test_dataset = EmbeddingDataset(base_dir, split='test', test_size=0.2, device=device)
 
-train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=False)
+train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+test_dataloader = DataLoader(test_dataset, batch_size=32, shuffle=False)
 
 # 初始化模型和优化器
-model = AttentionHAN(in_size=256, hidden_size=128, out_size=1).to(device)
-optimizer = optim.Adam(model.parameters(), lr=1e-3)
+model = SimpleHAN(in_size=256, hidden_size=128, out_size=1).to(device)
+optimizer = optim.Adam(model.parameters(), lr=1e-4)
 criterion = nn.BCEWithLogitsLoss()
 
 
@@ -70,6 +69,7 @@ def evaluate_hit_at_k(model, test_loader):
                 # 取出单个样本
                 text = text_vec[i]
                 img = image_vec[i]
+                true_image_idx = label[i].item()
 
                 # 对该文本计算与整个 batch 内所有图像的相似度
                 scores = []
@@ -91,25 +91,6 @@ def evaluate_hit_at_k(model, test_loader):
 
     return hits_at_k
 
-def evaluate_auc(model, dataloader):
-    model.eval()
-    all_probs = []
-    all_labels = []
-
-    with torch.no_grad():
-        for text_vec, image_vec, label in dataloader:
-            text_vec = text_vec.to(device)
-            image_vec = image_vec.to(device)
-            label = label.to(device)
-
-            logits = model(text_vec, image_vec, label)
-            probs = torch.sigmoid(logits).view(-1).cpu().numpy()  # 转为概率
-
-            all_probs.extend(probs)
-            all_labels.extend(label.view(-1).cpu().numpy())
-
-    auc = roc_auc_score(all_labels, all_probs)
-    return auc
 
 def train():
     # 训练循环
@@ -152,7 +133,7 @@ def train():
 
         avg_loss = total_loss / len(train_dataloader)
 
-        if epoch > 0 and epoch % 10 == 0:
+        if epoch > 0 and epoch % 20 == 0:
             # 评估并记录
             model.eval()
             total_test_loss = 0
@@ -171,29 +152,26 @@ def train():
 
             all_dataloader = DataLoader(
                 train_dataset + test_dataset,  # 合并训练集和测试集
-                batch_size=16,
+                batch_size=32,
                 shuffle=False
             )
 
             # 计算 Hits@K
             hits_at_k = evaluate_hit_at_k(model, all_dataloader)
+
+            # 打印评估结果
             print(f"[Eval @ Epoch {epoch}] Train Loss: {avg_loss:.4f}, Test Loss: {avg_test_loss:.4f}")
             for k, hits in hits_at_k.items():
                 print(f"Hits@{k}: {hits:.4f}")
 
-            auc_score = evaluate_auc(model, all_dataloader)
-            print(f"AUC: {auc_score:.4f}")
-
-
             # 记录每次评估的信息
-            model_name = f"epoch{epoch}.pt"
+            model_name = f"han_epoch{epoch}.pt"
             model_records.append({
                 'epoch': epoch,
                 'model_name': model_name,  # 只记录模型名称
                 'Hits@1': hits_at_k[1],
                 'Hits@5': hits_at_k[5],
                 'Hits@10': hits_at_k[10],
-                'AUC': auc_score,
                 'train_loss': avg_loss,
                 'test_loss': avg_test_loss,
                 'timestamp': datetime.now().strftime("%Y-%m-%d")
@@ -202,11 +180,11 @@ def train():
             # 判断是否保存最佳模型
             if avg_test_loss < best_val_loss:
                 best_val_loss = avg_test_loss
-                save_dir = "../han"
+                save_dir = "../simplehan"
                 os.makedirs(save_dir, exist_ok=True)
                 model_path = os.path.join(save_dir, model_name)
 
-
+                torch.save(model.state_dict(), model_path)  # 只保存最优模型
 
             # 非测试轮复用上一次的 test_loss
             else:

@@ -2,11 +2,16 @@ import sys
 
 import hnswlib
 import numpy as np
+import torch
+
+from model.simple_gnn import SimpleGNN
 from neo4jtest import GraphDatabase
 from pathlib import Path
 
 # 连接到 Neo4j 数据库
 driver = GraphDatabase.driver("bolt://localhost:7687", auth=("neo4j", "12345678"))
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def check_patient_exists(pid, tag):
     with driver.session() as session:
@@ -109,45 +114,6 @@ def build_hnsw_index(name_vec_map, dim):
         index_to_name[i] = name
     return index, index_to_name
 
-def build_cross_modal_index(text_map, image_map):
-    combined_map = {}
-    # 这里name加后缀标记类型，保证唯一
-    for name, vec in text_map.items():
-        combined_map[f"{name}_Text"] = vec
-    for name, vec in image_map.items():
-        combined_map[f"{name}_Image"] = vec
-    dim = len(next(iter(combined_map.values())))
-    index, index_to_key = build_hnsw_index(combined_map, dim)
-    return index, index_to_key, combined_map
-
-def create_cross_modal_edges(index, index_to_key, combined_map, driver, tag, rel_type):
-    n = len(index_to_key)
-    k = min(n - 1, 20)
-    vecs = list(combined_map.values())
-    count = 0
-    with driver.session() as session:
-        for i in range(n):
-            query_vec = vecs[i].reshape(1, -1)
-            labels, distances = index.knn_query(query_vec, k=k)
-            src_key = index_to_key[i]
-            src_name, src_label = src_key.rsplit("_", 1)
-            for j, neighbor_idx in enumerate(labels[0]):
-                if i == neighbor_idx:
-                    continue
-                dst_key = index_to_key[neighbor_idx]
-                dst_name, dst_label = dst_key.rsplit("_", 1)
-                # 只建立跨模态边，排除单模态边
-                if src_label == dst_label:
-                    continue
-                sim = 1 - distances[0][j]
-                print(f"[{rel_type}] {src_key} -> {dst_key}, similarity = {sim:.4f}")
-                session.run(f"""
-                    MATCH (a:{src_label} {{name: $src_name, tag: $tag}}), (b:{dst_label} {{name: $dst_name, tag: $tag}})
-                    MERGE (a)-[:{rel_type} {{weight: $weight, tag: $tag}}]->(b)
-                """, src_name=src_name, dst_name=dst_name, weight=sim, tag=tag)
-                count += 1
-    print(f"Total cross-modal edges created: {count}")
-
 def create_similar_edges(index, index_to_name, name_vec_map, driver, tag, label, rel_type):
     n = len(index_to_name)
     k = min(n - 1, 20)
@@ -171,6 +137,7 @@ def create_similar_edges(index, index_to_name, name_vec_map, driver, tag, label,
                     """, name1=name1, name2=name2, weight=sim, tag=tag)
                     count += 1
     print(f"Total edges created: {count}")
+
 def cosine_align(vectors):
     num_vectors = len(vectors)
     similarity_matrix = np.zeros((num_vectors, num_vectors))
@@ -185,11 +152,10 @@ def cosine_align(vectors):
     return aligned_vectors
 
 
-
-def run_hnsw_builder(tag, mode):
+def run_hnsw_builder(tag, ):
     dim = 256
     try:
-        if mode in (0, 1):  # 包含单模态构建
+
             print("读取 Text 向量...")
             text_map = fetch_embeddings(driver, tag, "Text")  # {name: vector}
             print("对齐 Text 向量...")
@@ -218,15 +184,50 @@ def run_hnsw_builder(tag, mode):
             print("构建 Image 单模态边...")
             create_similar_edges(image_index, image_index_to_name, aligned_image_map, driver, tag, "Image", "SINGLE_MODAL_SIMILAR")
 
-        if mode == 0:  # 跨模态构建
-            print("构建跨模态边（Text-Image）...")
-            text_map = fetch_embeddings(driver, tag, "Text")
-            image_map = fetch_embeddings(driver, tag, "Image")
-            combined_index, index_to_key, combined_map = build_cross_modal_index(text_map, image_map)
-            create_cross_modal_edges(combined_index, index_to_key, combined_map, driver, tag, "MULTI_MODAL_SIMILAR")
-
     except Exception as e:
         print(f"hnsw_builder 运行失败 ❌: {e}")
+
+def build_similarity_edges(model_path: str, tag: int, threshold: float = 0.7):
+    from model.model_han import AttentionHAN
+
+    # 加载模型
+    # model = AttentionHAN(in_size=256, hidden_size=128, out_size=1, num_heads=4, threshold=0.6)
+
+
+    model = SimpleGNN(in_size=256, hidden_size=128, out_size=1)
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.to(device)
+    model.eval()  # 设置为评估模式
+
+    # 获取所有 Text 和 Image 节点的嵌入向量
+    with driver.session() as session:
+        text_nodes = session.run(
+            "MATCH (t:Text {tag: $tag}) RETURN t.name AS name, t.embedding AS embedding", tag=tag)
+        image_nodes = session.run(
+            "MATCH (i:Image {tag: $tag}) RETURN i.name AS name, i.embedding AS embedding", tag=tag)
+
+        texts = [(record["name"], record["embedding"]) for record in text_nodes]
+        images = [(record["name"], record["embedding"]) for record in image_nodes]
+
+        for text_name, text_vec in texts:
+            text_tensor = torch.tensor(text_vec, dtype=torch.float32).unsqueeze(0).to(device)
+            for image_name, image_vec in images:
+                image_tensor = torch.tensor(image_vec, dtype=torch.float32).unsqueeze(0).to(device)
+
+                with torch.no_grad():
+                    logit = model(text_tensor, image_tensor)
+                    prob = torch.sigmoid(logit).item()
+                    print(prob)
+
+                if prob >= threshold:
+                    session.run("""
+                        MATCH (t:Text {name: $text_name, tag: $tag})
+                        MATCH (i:Image {name: $image_name, tag: $tag})
+                        MERGE (t)-[:MULTI_MODAL_SIMILAR {score: $score, tag: $tag}]->(i)
+                    """, text_name=text_name, image_name=image_name, tag=tag, score=prob)
+
+        print("Similarity edge creation complete.")
+
 
 if __name__ == "__main__":
     # if len(sys.argv) != 5:
@@ -240,15 +241,16 @@ if __name__ == "__main__":
     # type = sys.argv[5]
 
     patient_ids = ids.split(',')
-    tag = 2
-    mode = 0
-    institution = "影像"
-    type = "image"
-    base_dir = Path("../../data/align/match")
+    tag = 6
+    institution = "文本"
+    type = "text"
+    base_dir = Path("../data/align/match")
 
 
     for pid in patient_ids:
         run_import(pid,institution,type)
         check_patient_exists(pid, tag)
 
-    run_hnsw_builder(tag, mode)
+    run_hnsw_builder(tag)
+    build_similarity_edges('gnn/han_epoch100.pt', tag, threshold=0.7)
+

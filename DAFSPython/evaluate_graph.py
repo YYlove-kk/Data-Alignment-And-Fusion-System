@@ -9,22 +9,29 @@ def connect_to_neo4j(uri, user, password):
     return graph
 
 # 获取指定标签的节点和边
-def get_graph_from_tag(graph, tag):
-    query = f"MATCH (n:{tag})-[r]->(m) RETURN n, r, m"
-    result = graph.run(query)
+def get_graph_from_tag(graph, tag_value):
+    query = """
+    MATCH (n)-[r]->(m)
+    WHERE n.tag = $tag AND m.tag = $tag AND r.tag = $tag
+    AND (n:Patient OR n:Text OR n:Image OR n:Institution)
+    AND (m:Patient OR m:Text OR m:Image OR m:Institution)
+    RETURN n, r, m
+    """
+    result = graph.run(query, tag=tag_value)
 
-    G = nx.Graph()  # 创建无向图
+    G = nx.Graph()
 
     for record in result:
         node1 = record['n']
         node2 = record['m']
 
-        # 添加节点和边到图中
-        G.add_node(node1['id'])  # 假设节点有唯一的 'id' 属性
-        G.add_node(node2['id'])
-        G.add_edge(node1['id'], node2['id'])
+        # 这里用 Neo4j 内部节点id作为唯一节点标识，避免没有id属性的问题
+        G.add_node(node1.identity)
+        G.add_node(node2.identity)
+        G.add_edge(node1.identity, node2.identity)
 
     return G
+
 
 # 计算平均度
 def calculate_average_degree(G):
@@ -42,6 +49,10 @@ def calculate_connected_components(G):
 # 主函数，评估图谱结构
 def evaluate_graph_structure(graph, tag):
     G = get_graph_from_tag(graph, tag)
+    print(f"Number of nodes: {G.number_of_nodes()}")
+    print(f"Number of edges: {G.number_of_edges()}")
+    if G.number_of_nodes() == 0:
+        print("Warning: The graph is empty!")
 
     # 计算评估指标
     avg_degree = calculate_average_degree(G)
@@ -62,11 +73,13 @@ if __name__ == "__main__":
     # 连接到Neo4j数据库
     graph = connect_to_neo4j(uri, user, password)
 
-    if len(sys.argv) != 2:
-        print("Usage: python evaluate_graph.py <tag>")
-        sys.exit(1)
+    # if len(sys.argv) != 2:
+    #     print("Usage: python evaluate_graph.py <tag>")
+    #     sys.exit(1)
 
-    tag = int(sys.argv[1])
+    tag = 6
+
+
 
     # 执行评估
     evaluate_graph_structure(graph, tag)

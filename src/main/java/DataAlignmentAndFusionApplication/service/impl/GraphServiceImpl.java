@@ -76,8 +76,9 @@ public class GraphServiceImpl implements GraphService {
 
             UploadRecord r = uploadRecordMapper.selectOne(new QueryWrapper<UploadRecord>().eq("source_id", sourceId));
             String institution = r.getInstitution();
+            String type = r.getModalityType();
 
-            runImportScript(appConfig.getInterpreterPath(), appConfig.getNeo4jScriptPath(), patientIdsStr,mode, tag, institution);
+            runImportScript(appConfig.getInterpreterPath(), appConfig.getNeo4jScriptPath(), patientIdsStr, tag, institution, type);
             runBuildScript(appConfig.getInterpreterPath(), appConfig.getNeo4jScriptPath(), patientIdsStr,mode, tag);
 
             BuildRecord record = new BuildRecord();
@@ -133,15 +134,15 @@ public class GraphServiceImpl implements GraphService {
 
 
 
-    private void runImportScript(String executable, String scriptPath, String patientIdsStr, int tag, int mode,String institution) {
+    private void runImportScript(String executable, String scriptPath, String patientIdsStr, int tag, String institution,String type) {
         // 组装参数
         String[] command = new String[]{
                 executable,
                 scriptPath,
                 patientIdsStr,
                 String.valueOf(tag),
-                String.valueOf(mode),
-                institution
+                institution,
+                type
         };
 
         ProcessBuilder processBuilder = new ProcessBuilder(command);

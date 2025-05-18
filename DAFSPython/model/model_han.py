@@ -1,9 +1,8 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 
 class AttentionHAN(nn.Module):
-    def __init__(self, in_size=256, hidden_size=128, out_size=1, num_heads=4, threshold=0.6):
+    def __init__(self, in_size=256, hidden_size=128, out_size=1, num_heads=4, threshold=0.7):
         super().__init__()
         self.num_heads = num_heads
         self.head_dim = hidden_size // num_heads
@@ -29,14 +28,7 @@ class AttentionHAN(nn.Module):
         self.output_fc = nn.Linear(hidden_size * 3, out_size)
 
     def compute_chi_square(self, feature, label, num_classes=2):
-        """
-        Compute Chi-square stats for each feature dimension
-        Input:
-            feature: (B, D)
-            label:   (B,)
-        Return:
-            chi_squared: (D,)
-        """
+
         chi_squared = torch.zeros(feature.shape[1]).to(feature.device)
 
         for f in range(feature.shape[1]):

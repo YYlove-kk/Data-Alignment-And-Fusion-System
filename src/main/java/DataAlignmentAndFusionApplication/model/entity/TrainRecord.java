@@ -31,7 +31,7 @@ public class TrainRecord {
      */
     private String status;
 
-
+    private String resultPath;
     /**
      * 
      */

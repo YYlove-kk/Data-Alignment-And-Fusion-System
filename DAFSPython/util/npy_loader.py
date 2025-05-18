@@ -54,7 +54,7 @@ class EmbeddingDataset(Dataset):
             image_vec = image_vec.squeeze(0)
 
         # 随机决定是否构造负样本
-        if np.random.rand() < 0.8:
+        if np.random.rand() < 0.7:
             label = 1
         else:
             neg_idx = (idx + np.random.randint(1, len(self.pair_list))) % len(self.pair_list)

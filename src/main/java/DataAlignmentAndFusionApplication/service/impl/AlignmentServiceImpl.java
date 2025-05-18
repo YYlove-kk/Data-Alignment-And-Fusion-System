@@ -47,7 +47,6 @@ public class AlignmentServiceImpl extends ServiceImpl<AlignmentResultMapper, Ali
     public Result<String> alignTextAndImage() throws Exception {
         try {
             // 构造参数列表
-            String dataDir = appConfig.getAlignSourcePath();
             List<String> arguments = List.of(
                     "--output_dir", appConfig.getAlignOutputPath()
             );
